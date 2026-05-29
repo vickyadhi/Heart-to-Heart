@@ -71,13 +71,13 @@ class _DashboardPageState extends State<DashboardPage> {
   void _sendLoveTap(ConnectionService conn) {
     conn.sendLoveEvent('love_tap');
     _heartsOverlayKey.currentState?.spawnHearts();
-    HapticFeedback.lightImpact();
+    HapticFeedback.vibrate(); // Direct phone vibration when big heart is tapped!
   }
 
   void _sendMoodTap(ConnectionService conn, String type, String emoji, String label) {
     conn.sendLoveEvent(type);
     _heartsOverlayKey.currentState?.spawnHearts(emoji: emoji);
-    HapticFeedback.mediumImpact();
+    // Removed vibration/haptics from emoji taps per user request
 
     final partnerName = Provider.of<AuthService>(context, listen: false).currentUser?.partnerName ?? 'Partner';
     ScaffoldMessenger.of(context).clearSnackBars();
@@ -381,16 +381,32 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 52), // Increased space below central heart to avoid overlapping/disturbance!
 
               // HORIZONTAL EMOJIS MOOD ROW
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildEmojiButton(conn, 'miss_you', '🥺', 'Miss You'),
-                  _buildEmojiButton(conn, 'sad', '😢', 'Sad'),
-                  _buildEmojiButton(conn, 'excited', '🤩', 'Excited'),
-                  _buildEmojiButton(conn, 'thinking', '💭', 'Thinking'),
+                  ThreeDEmojiButton(
+                    onTap: () => _sendMoodTap(conn, 'miss_you', '🥺', 'Miss You'),
+                    emoji: '🥺',
+                    label: 'Miss You',
+                  ),
+                  ThreeDEmojiButton(
+                    onTap: () => _sendMoodTap(conn, 'sad', '😢', 'Sad'),
+                    emoji: '😢',
+                    label: 'Sad',
+                  ),
+                  ThreeDEmojiButton(
+                    onTap: () => _sendMoodTap(conn, 'excited', '🤩', 'Excited'),
+                    emoji: '🤩',
+                    label: 'Excited',
+                  ),
+                  ThreeDEmojiButton(
+                    onTap: () => _sendMoodTap(conn, 'thinking', '💭', 'Thinking'),
+                    emoji: '💭',
+                    label: 'Thinking',
+                  ),
                 ],
               ),
 
@@ -601,42 +617,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildEmojiButton(ConnectionService conn, String type, String emoji, String label) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GestureDetector(
-          onTap: () => _sendMoodTap(conn, type, emoji, label),
-          child: Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: AppTheme.premiumShadow,
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-            child: Center(
-              child: Text(
-                emoji,
-                style: const TextStyle(fontSize: 26),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'Outfit',
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textDark,
-          ),
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildStatsCard({
     required Widget icon,
@@ -676,6 +657,110 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class ThreeDEmojiButton extends StatefulWidget {
+  final VoidCallback onTap;
+  final String emoji;
+  final String label;
+
+  const ThreeDEmojiButton({
+    super.key,
+    required this.onTap,
+    required this.emoji,
+    required this.label,
+  });
+
+  @override
+  State<ThreeDEmojiButton> createState() => _ThreeDEmojiButtonState();
+}
+
+class _ThreeDEmojiButtonState extends State<ThreeDEmojiButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final double depth = 6.0;
+    final double activeDepth = _isPressed ? 1.5 : depth;
+    final double translation = _isPressed ? depth - 1.5 : 0.0;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTapDown: (_) => setState(() => _isPressed = true),
+          onTapUp: (_) => setState(() => _isPressed = false),
+          onTapCancel: () => setState(() => _isPressed = false),
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 60),
+            curve: Curves.easeOut,
+            transform: Matrix4.translationValues(0, translation, 0),
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white,
+                  Colors.grey[100]!,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              border: Border.all(
+                color: Colors.white,
+                width: 2.0,
+              ),
+              boxShadow: [
+                // Bottom dark 3D depth shadow matching theme primary accent
+                BoxShadow(
+                  color: AppTheme.primary.withOpacity(0.18),
+                  offset: Offset(0, activeDepth),
+                  blurRadius: _isPressed ? 2.5 : 6.0,
+                  spreadRadius: 0.5,
+                ),
+                if (!_isPressed)
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    offset: const Offset(0, 1),
+                    blurRadius: 1,
+                  ),
+              ],
+            ),
+            child: Center(
+              child: Transform.scale(
+                scale: _isPressed ? 0.94 : 1.0,
+                child: Text(
+                  widget.emoji,
+                  style: TextStyle(
+                    fontSize: 28,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.12),
+                        offset: const Offset(0, 2),
+                        blurRadius: 2,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          widget.label,
+          style: const TextStyle(
+            fontFamily: 'Outfit',
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textDark,
+          ),
+        ),
+      ],
     );
   }
 }

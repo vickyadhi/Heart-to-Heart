@@ -52,9 +52,9 @@ class _PulsingHeartState extends State<PulsingHeart> with TickerProviderStateMix
         setState(() {
           for (var i = _ripples.length - 1; i >= 0; i--) {
             final r = _ripples[i];
-            r.radius += 2.8;
-            r.opacity = (1.0 - (r.radius / 130.0)).clamp(0.0, 0.6);
-            if (r.radius >= 130.0) {
+            r.radius += 1.5;
+            r.opacity = (1.0 - (r.radius / 65.0)).clamp(0.0, 0.6);
+            if (r.radius >= 65.0) {
               _ripples.removeAt(i);
             }
           }
