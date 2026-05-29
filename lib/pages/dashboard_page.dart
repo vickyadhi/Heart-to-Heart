@@ -250,6 +250,9 @@ class _DashboardPageState extends State<DashboardPage> {
     final streak = user?.streakCount ?? 127;
     final sent = user?.loveSentCount ?? 324;
     final hearts = user?.heartsCount ?? 8;
+    
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
 
     return FloatingHeartsOverlay(
       key: _heartsOverlayKey,
@@ -414,7 +417,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 24),
 
-              // COUPLES SPARK CARD (Useful advice for couples!)
+              // REDESIGNED DYNAMIC COUPLES SPARK CARD (Ultra Premium Adaptive Skeuomorphic UI)
               GestureDetector(
                 onTap: () {
                   setState(() {
@@ -423,25 +426,69 @@ class _DashboardPageState extends State<DashboardPage> {
                   HapticFeedback.selectionClick();
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 14.0 : 20.0, 
+                    vertical: isSmallScreen ? 14.0 : 18.0,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.85),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: AppTheme.premiumShadow,
-                    border: Border.all(color: AppTheme.primary.withOpacity(0.08), width: 1),
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFFFFEAEE), // Soft romantic sunset pink
+                        Color(0xFFFFF5E4), // Gentle gold peach
+                        Color(0xFFF2E7FF), // Soft lavender dream
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(isSmallScreen ? 20 : 28),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.9),
+                      width: isSmallScreen ? 1.8 : 2.5,
+                    ),
+                    boxShadow: [
+                      // Skeuomorphic drop shadow
+                      BoxShadow(
+                        color: AppTheme.primary.withOpacity(0.12),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 8),
+                      ),
+                      // Inner highlight shadow (white reflection)
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.85),
+                        blurRadius: 8,
+                        offset: const Offset(-2, -2),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
+                      // 3D Glowing Bulb Container
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: EdgeInsets.all(isSmallScreen ? 8.0 : 12.0),
                         decoration: BoxDecoration(
-                          color: AppTheme.primary.withOpacity(0.06),
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFFFF9E80), // Vibrant peach-orange
+                              Color(0xFFFF5252), // Glowing coral-red
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFF5252).withValues(alpha: 0.3),
+                              blurRadius: 10,
+                              spreadRadius: 1,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        child: const Icon(
-                          Icons.lightbulb_outline_rounded,
-                          color: AppTheme.primary,
-                          size: 18,
+                        child: Icon(
+                          Icons.lightbulb_rounded, // Solid lightbulb for premium feel
+                          color: Colors.white,
+                          size: isSmallScreen ? 18.0 : 22.0,
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -449,27 +496,80 @@ class _DashboardPageState extends State<DashboardPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "Couple's Daily Spark ✨",
-                              style: TextStyle(fontFamily: 'Outfit', 
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: AppTheme.primary,
-                              ),
+                            // Header row with premium "NEW" or "SPARK" tag
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              runSpacing: 4,
+                              children: [
+                                Text(
+                                  "Couple's Daily Spark",
+                                  style: TextStyle(
+                                    fontFamily: 'Outfit', 
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: isSmallScreen ? 13.0 : 15.0,
+                                    color: AppTheme.primaryDark,
+                                    letterSpacing: 0.1,
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [AppTheme.primary, AppTheme.accent],
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Text(
+                                    "SPARK ✨",
+                                    style: TextStyle(
+                                      fontFamily: 'Outfit',
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 6),
                             Text(
                               _coupleTips[_currentTipIndex],
-                              style: TextStyle(fontFamily: 'Inter', 
-                                fontSize: 11,
+                              style: TextStyle(
+                                fontFamily: 'Inter', 
+                                fontSize: isSmallScreen ? 11.0 : 12.0,
                                 color: AppTheme.textDark,
-                                height: 1.35,
+                                height: 1.45,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              "Tap to discover new inspiration • Let's talk! 💖",
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: isSmallScreen ? 8.5 : 9.5,
+                                color: AppTheme.textLight.withValues(alpha: 0.7),
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Icon(Icons.chevron_right_rounded, color: AppTheme.textLight.withOpacity(0.4), size: 18),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.7),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.arrow_forward_ios_rounded, 
+                          color: AppTheme.primary, 
+                          size: isSmallScreen ? 10.0 : 12.0,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -486,30 +586,33 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 20),
 
-              // BOTTOM STATS CARDS ROW
+              // BOTTOM STATS CARDS ROW (Highly Adaptive for All Screens)
               Row(
                 children: [
                   Expanded(
                     child: _buildStatsCard(
-                      icon: const Icon(Icons.local_fire_department_rounded, color: Colors.orange, size: 24),
+                      icon: Icon(Icons.local_fire_department_rounded, color: Colors.orange, size: isSmallScreen ? 20.0 : 24.0),
                       value: '$streak',
                       label: 'Love Streak',
+                      context: context,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: _buildStatsCard(
-                      icon: const Icon(Icons.favorite_rounded, color: AppTheme.primary, size: 22),
+                      icon: Icon(Icons.favorite_rounded, color: AppTheme.primary, size: isSmallScreen ? 18.0 : 22.0),
                       value: '$sent',
                       label: 'Love Sent',
+                      context: context,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: _buildStatsCard(
-                      icon: const Icon(Icons.diamond_rounded, color: Colors.blueAccent, size: 22),
+                      icon: Icon(Icons.diamond_rounded, color: Colors.blueAccent, size: isSmallScreen ? 18.0 : 22.0),
                       value: '$hearts',
                       label: 'Hearts',
+                      context: context,
                     ),
                   ),
                 ],
@@ -1011,24 +1114,32 @@ class _DashboardPageState extends State<DashboardPage> {
     required Widget icon,
     required String value,
     required String label,
+    required BuildContext context,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(
+        horizontal: isSmallScreen ? 8.0 : 12.0, 
+        vertical: isSmallScreen ? 12.0 : 16.0,
+      ),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: AppTheme.premiumShadow,
         border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           icon,
-          const SizedBox(height: 8),
+          SizedBox(height: isSmallScreen ? 4.0 : 8.0),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Outfit',
-              fontSize: 18,
+              fontSize: isSmallScreen ? 15.0 : 18.0,
               fontWeight: FontWeight.bold,
               color: AppTheme.textDark,
             ),
@@ -1036,10 +1147,12 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 2),
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontFamily: 'Inter',
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
+              fontSize: isSmallScreen ? 8.5 : 10.0,
+              fontWeight: FontWeight.bold,
               color: AppTheme.textLight.withOpacity(0.7),
             ),
           ),

@@ -1,9 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/connection_service.dart';
 import '../widgets/chat_bubble.dart';
-import '../models/love_event.dart';
 import '../theme.dart';
 
 class ChatPage extends StatefulWidget {
@@ -18,6 +19,60 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
+
+  // 3D Sticker Drawer state variables
+  bool _showStickerDrawer = false;
+
+  final List<Map<String, String>> _fluent3DStickers = const [
+    {
+      'name': 'Heart Ribbon',
+      'url': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Heart%20with%20ribbon/3D/heart_with_ribbon_3d.png',
+    },
+    {
+      'name': 'Hearts Face',
+      'url': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Smiling%20face%20with%20hearts/3D/smiling_face_with_hearts_3d.png',
+    },
+    {
+      'name': 'Kiss Face',
+      'url': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Face%20blowing%20a%20kiss/3D/face_blowing_a_kiss_3d.png',
+    },
+    {
+      'name': 'Red Heart',
+      'url': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Red%20heart/3D/red_heart_3d.png',
+    },
+    {
+      'name': 'Sparkles',
+      'url': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Sparkles/3D/sparkles_3d.png',
+    },
+    {
+      'name': 'Fire',
+      'url': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Fire/3D/fire_3d.png',
+    },
+    {
+      'name': 'Tears of Joy',
+      'url': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Face%20with%20tears%20of%20joy/3D/face_with_tears_of_joy_3d.png',
+    },
+    {
+      'name': 'Loudly Crying',
+      'url': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Loudly%20crying%20face/3D/loudly_crying_face_3d.png',
+    },
+    {
+      'name': 'Teddy Bear',
+      'url': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Teddy%20bear/3D/teddy_bear_3d.png',
+    },
+    {
+      'name': 'Rose',
+      'url': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Rose/3D/rose_3d.png',
+    },
+    {
+      'name': 'Two Hearts',
+      'url': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Two%20hearts/3D/two_hearts_3d.png',
+    },
+    {
+      'name': 'Ring',
+      'url': 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Ring/3D/ring_3d.png',
+    },
+  ];
 
   @override
   void dispose() {
@@ -184,19 +239,23 @@ class _ChatPageState extends State<ChatPage> {
                     Container(
                       width: 8,
                       height: 8,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF34C759), // Green dot
+                      decoration: BoxDecoration(
+                        color: (conn.partnerShowOnline && conn.partnerIsOnline)
+                            ? const Color(0xFF34C759)
+                            : Colors.grey, // Grey dot if offline or hidden
                         shape: BoxShape.circle,
                       ),
                     ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'Online',
+                    Text(
+                      (conn.partnerShowOnline && conn.partnerIsOnline) ? 'Online' : 'Offline',
                       style: TextStyle(
                         fontFamily: 'Outfit',
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF34C759),
+                        color: (conn.partnerShowOnline && conn.partnerIsOnline)
+                            ? const Color(0xFF34C759)
+                            : Colors.grey,
                       ),
                     ),
                   ],
@@ -249,73 +308,152 @@ class _ChatPageState extends State<ChatPage> {
                   ),
           ),
 
-          // 3. FLOATING BOTTOM INPUT BAR (Image 2 style)
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 116), // optimized capsule bottom nav clearance
-            color: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 15,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-                border: Border.all(color: Colors.white, width: 1.5),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      style: const TextStyle(
-                        fontFamily: 'Outfit',
-                        color: AppTheme.textDark,
-                        fontSize: 15,
+          // 3. FLOATING BOTTOM INPUT BAR & STICKERS DRAWER (Image 2 style)
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 15,
+                        offset: const Offset(0, 4),
                       ),
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: const InputDecoration(
-                        hintText: 'Write your message...',
-                        hintStyle: TextStyle(
-                          fontFamily: 'Outfit',
-                          color: Color(0x99796E70),
-                          fontSize: 15,
+                    ],
+                    border: Border.all(color: Colors.white, width: 1.5),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _messageController,
+                          onTap: () {
+                            if (_showStickerDrawer) {
+                              setState(() => _showStickerDrawer = false);
+                            }
+                          },
+                          style: const TextStyle(
+                            fontFamily: 'Outfit',
+                            color: AppTheme.textDark,
+                            fontSize: 15,
+                          ),
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: const InputDecoration(
+                            hintText: 'Write your message...',
+                            hintStyle: TextStyle(
+                              fontFamily: 'Outfit',
+                              color: Color(0x99796E70),
+                              fontSize: 15,
+                            ),
+                            filled: false,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          onSubmitted: (_) => _sendMessage(conn),
                         ),
-                        filled: false,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 12),
                       ),
-                      onSubmitted: (_) => _sendMessage(conn),
-                    ),
+                      const SizedBox(width: 8),
+                      // 3D Stickers Toggle button
+                      IconButton(
+                        onPressed: () {
+                          FocusScope.of(context).unfocus();
+                          setState(() {
+                            _showStickerDrawer = !_showStickerDrawer;
+                          });
+                        },
+                        icon: Icon(
+                          _showStickerDrawer
+                              ? Icons.keyboard_rounded
+                              : Icons.emoji_emotions_outlined,
+                          color: _showStickerDrawer ? AppTheme.primary : AppTheme.textLight,
+                          size: 24,
+                        ),
+                      ),
+                      // Send Icon
+                      IconButton(
+                        onPressed: () => _sendMessage(conn),
+                        icon: const Icon(
+                          Icons.send_rounded,
+                          color: AppTheme.textDark,
+                          size: 22,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  // Microphone Icon
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.mic_none_rounded,
-                      color: AppTheme.textLight,
-                      size: 24,
-                    ),
-                  ),
-                  // Send Icon
-                  IconButton(
-                    onPressed: () => _sendMessage(conn),
-                    icon: const Icon(
-                      Icons.send_rounded,
-                      color: AppTheme.textDark,
-                      size: 22,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+
+              // 3D Sticker Grid Drawer
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                height: _showStickerDrawer ? 240 : 0,
+                color: Colors.white.withOpacity(0.95),
+                child: _showStickerDrawer
+                    ? GridView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 1,
+                        ),
+                        itemCount: _fluent3DStickers.length,
+                        itemBuilder: (context, index) {
+                          final sticker = _fluent3DStickers[index];
+                          return GestureDetector(
+                            onTap: () {
+                              conn.sendLoveEvent('sticker', message: sticker['url']!);
+                              HapticFeedback.mediumImpact();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.03),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                                border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                              ),
+                              child: Image.network(
+                                sticker['url']!,
+                                fit: BoxFit.contain,
+                                loadingBuilder: (context, child, progress) {
+                                  if (progress == null) return child;
+                                  return const Center(
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppTheme.primary,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(height: 110), // clearance for bottom capsule nav bar
+            ],
           ),
         ],
       ),

@@ -76,7 +76,7 @@ class ChatBubble extends StatelessWidget {
               ),
               child: event.type == 'sticker'
                   ? Container(
-                      constraints: const BoxConstraints(width: 110, height: 110),
+                      constraints: const BoxConstraints.tightFor(width: 110, height: 110),
                       child: Image.network(
                         event.message,
                         fit: BoxFit.contain,

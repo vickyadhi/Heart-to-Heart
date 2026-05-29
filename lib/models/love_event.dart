@@ -54,6 +54,10 @@ class LoveEvent {
         return 'Your partner is thinking of you';
       case 'chat':
         return message;
+      case 'voice_note':
+        return 'Voice Message 🎙️ ($message)';
+      case 'sticker':
+        return 'Sent a 3D Sticker ✨';
       default:
         return 'Sent you a heartbeat';
     }
@@ -73,6 +77,10 @@ class LoveEvent {
         return 'You thinking your partner';
       case 'chat':
         return message;
+      case 'voice_note':
+        return 'Voice Message 🎙️ ($message)';
+      case 'sticker':
+        return 'You sent a 3D Sticker ✨';
       default:
         return 'You sent a heartbeat';
     }

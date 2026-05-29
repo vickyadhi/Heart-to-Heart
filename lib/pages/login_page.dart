@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
@@ -55,6 +56,116 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  void _showGoogleErrorBypassDialog(AuthService authService, String errorMsg) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext ctx) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+            backgroundColor: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Setup Needed ⚙️',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withOpacity(0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.settings_suggest_rounded,
+                        color: AppTheme.primary,
+                        size: 50,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    "Google Sign-In failed (API Exception 10).\n\nThis usually means the SHA-1 fingerprint for this build hasn't been registered in the Firebase Console yet.\n\nWould you like to instantly sign in with a Demo Test Account to preview the app?",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 13,
+                      color: AppTheme.textLight.withOpacity(0.9),
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(ctx);
+                        setState(() => _errorMessage = null);
+                        try {
+                          // Try logging in with demo account
+                          bool loggedIn = false;
+                          try {
+                            loggedIn = await authService.loginWithEmail('demo@h2h.com', 'password123');
+                          } catch (_) {
+                            // If it doesn't exist, automatically sign up the demo account!
+                            loggedIn = await authService.signUpWithEmail('Demo User', 'demo@h2h.com', 'password123');
+                          }
+                          if (loggedIn) {
+                            _navigateNext(authService);
+                          }
+                        } catch (err) {
+                          setState(() {
+                            _errorMessage = err.toString().replaceAll('Exception: ', '').trim();
+                          });
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        elevation: 0,
+                      ),
+                      child: const Text('Use Demo Account', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 16)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.primary,
+                        side: const BorderSide(color: AppTheme.primary, width: 1.5),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      ),
+                      child: const Text('Cancel', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _handleGoogleAuth(AuthService authService) async {
     setState(() => _errorMessage = null);
     try {
@@ -63,9 +174,14 @@ class _LoginPageState extends State<LoginPage> {
         _navigateNext(authService);
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString().replaceAll('Exception: ', '').trim();
-      });
+      final errStr = e.toString();
+      if (errStr.contains('10') || errStr.contains('sign_in_failed') || errStr.contains('ApiException')) {
+        _showGoogleErrorBypassDialog(authService, errStr);
+      } else {
+        setState(() {
+          _errorMessage = errStr.replaceAll('Exception: ', '').trim();
+        });
+      }
     }
   }
 
@@ -116,19 +232,26 @@ class _LoginPageState extends State<LoginPage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // H2H Logo & Header
+                          // Premium 3D H2H Hands Heart Logo
                           Container(
-                            width: 68,
-                            height: 68,
-                            decoration: const BoxDecoration(
-                              color: AppTheme.primary,
+                            width: 110,
+                            height: 110,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.8),
                               shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.primary.withOpacity(0.12),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.favorite_rounded,
-                                color: Colors.white,
-                                size: 34,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Image.asset(
+                                'assets/images/hands_heart_3d.png',
+                                fit: BoxFit.contain,
                               ),
                             ),
                           ),

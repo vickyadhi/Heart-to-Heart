@@ -29,6 +29,13 @@ class ConnectionService extends ChangeNotifier {
   int? _partnerBatteryLevel;
   bool _partnerIsCharging = false;
   String? _partnerPhotoUrl;
+  
+  // Partner's real-time statuses synced from Firestore
+  String? _partnerCustomStatus;
+  String? _partnerCustomStatusEmoji;
+  DateTime? _partnerNextMeetingDate;
+  bool _partnerIsOnline = false;
+  bool _partnerShowOnline = true;
 
   StreamSubscription<QuerySnapshot>? _eventsSubscription;
   StreamSubscription<DocumentSnapshot>? _userSubscription;
@@ -46,6 +53,11 @@ class ConnectionService extends ChangeNotifier {
   int? get partnerBatteryLevel => _partnerBatteryLevel;
   bool get partnerIsCharging => _partnerIsCharging;
   String? get partnerPhotoUrl => _partnerPhotoUrl;
+  String? get partnerCustomStatus => _partnerCustomStatus;
+  String? get partnerCustomStatusEmoji => _partnerCustomStatusEmoji;
+  DateTime? get partnerNextMeetingDate => _partnerNextMeetingDate;
+  bool get partnerIsOnline => _partnerIsOnline;
+  bool get partnerShowOnline => _partnerShowOnline;
 
   ConnectionService(this._authService) {
     _authService.addListener(_onAuthChanged);
@@ -252,6 +264,13 @@ class ConnectionService extends ChangeNotifier {
         _partnerBatteryLevel = data['batteryLevel'] as int?;
         _partnerIsCharging = data['isCharging'] as bool? ?? false;
         _partnerPhotoUrl = data['photoUrl'] as String?;
+        _partnerCustomStatus = data['customStatus'] as String?;
+        _partnerCustomStatusEmoji = data['customStatusEmoji'] as String?;
+        _partnerIsOnline = data['isOnline'] as bool? ?? false;
+        _partnerShowOnline = data['showOnlineStatus'] as bool? ?? true;
+        _partnerNextMeetingDate = data['nextMeetingDate'] != null 
+            ? DateTime.tryParse(data['nextMeetingDate'] as String) 
+            : null;
         notifyListeners();
       }
     });

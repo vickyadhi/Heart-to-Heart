@@ -88,6 +88,8 @@ class AuthService extends ChangeNotifier {
       final doc = await _firestore.collection('users').doc(uid).get();
       if (doc.exists) {
         final data = doc.data()!;
+        await _firestore.collection('users').doc(uid).update({'isOnline': true});
+        data['isOnline'] = true;
         if (data['pairingCode'] == null || (data['pairingCode'] as String).isEmpty) {
           final pairingCode = await _generateUniquePairingCode();
           await _firestore.collection('users').doc(uid).update({'pairingCode': pairingCode});
@@ -297,6 +299,40 @@ class AuthService extends ChangeNotifier {
     _setLoading(false);
   }
 
+  // Set real-time custom status
+  Future<void> updateCustomStatus(String? status, String? emoji) async {
+    if (_currentUser == null) return;
+    _currentUser = _currentUser!.copyWith(
+      customStatus: status,
+      customStatusEmoji: emoji,
+    );
+    notifyListeners();
+    try {
+      await _firestore.collection('users').doc(_currentUser!.uid).update({
+        'customStatus': status,
+        'customStatusEmoji': emoji,
+      });
+    } catch (e) {
+      print('Firestore updateCustomStatus error: $e');
+    }
+  }
+
+  // Set real-time next meeting date for countdowns
+  Future<void> updateNextMeetingDate(DateTime? date) async {
+    if (_currentUser == null) return;
+    _currentUser = _currentUser!.copyWith(
+      nextMeetingDate: date,
+    );
+    notifyListeners();
+    try {
+      await _firestore.collection('users').doc(_currentUser!.uid).update({
+        'nextMeetingDate': date?.toIso8601String(),
+      });
+    } catch (e) {
+      print('Firestore updateNextMeetingDate error: $e');
+    }
+  }
+
   // Update pairing state
   void updatePartnerDetails(String? partnerUid, String? partnerName, {String? partnerNickname, DateTime? connectedAt}) {
     if (_currentUser == null) return;
@@ -419,6 +455,11 @@ class AuthService extends ChangeNotifier {
   // Logout
   Future<void> logout() async {
     _setLoading(true);
+    if (_currentUser != null) {
+      try {
+        await _firestore.collection('users').doc(_currentUser!.uid).update({'isOnline': false});
+      } catch (_) {}
+    }
     _currentUser = null;
     try {
       await _googleSignIn.signOut();

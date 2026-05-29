@@ -103,41 +103,17 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   }
 
   Widget _buildLogo() {
-    return SizedBox(
-      width: 140,
-      height: 100,
-      child: Stack(
-        children: [
-          // Large main heart
-          const Align(
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.favorite_rounded,
-              color: Colors.white,
-              size: 85,
-            ),
-          ),
-          // Cut-out background-colored heart (creates the gap border)
-          const Positioned(
-            bottom: 4,
-            right: 20,
-            child: Icon(
-              Icons.favorite_rounded,
-              color: Color(0xFFEF5350), // Matches splash background
-              size: 48,
-            ),
-          ),
-          // Small overlapping heart
-          const Positioned(
-            bottom: 8,
-            right: 24,
-            child: Icon(
-              Icons.favorite_rounded,
-              color: Colors.white,
-              size: 40,
-            ),
-          ),
-        ],
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.18),
+        shape: BoxShape.circle,
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Image.asset(
+        'assets/images/hands_heart_3d.png',
+        fit: BoxFit.contain,
       ),
     );
   }
@@ -145,7 +121,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEF5350),
+      backgroundColor: const Color(0xFFF34D5F),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final w = constraints.maxWidth;

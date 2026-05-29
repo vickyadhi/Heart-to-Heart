@@ -17,13 +17,17 @@ class UserProfile {
   final DateTime? lastActive;
   final bool isOnline;
 
-  // Settings properties exactly matching the settings card mockup
   final bool pushNotificationsEnabled;
   final bool soundEnabled;
   final bool vibrationEnabled;
   final bool emailNotificationsEnabled;
   final bool showOnlineStatus;
   final bool readReceipts;
+
+  // Real-time custom status and next meeting countdowns for couples
+  final String? customStatus;
+  final String? customStatusEmoji;
+  final DateTime? nextMeetingDate;
 
   UserProfile({
     required this.uid,
@@ -49,6 +53,9 @@ class UserProfile {
     this.emailNotificationsEnabled = true,
     this.showOnlineStatus = true,
     this.readReceipts = true,
+    this.customStatus,
+    this.customStatusEmoji,
+    this.nextMeetingDate,
   });
 
   UserProfile copyWith({
@@ -75,6 +82,9 @@ class UserProfile {
     bool? emailNotificationsEnabled,
     bool? showOnlineStatus,
     bool? readReceipts,
+    String? customStatus,
+    String? customStatusEmoji,
+    DateTime? nextMeetingDate,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -100,6 +110,9 @@ class UserProfile {
       emailNotificationsEnabled: emailNotificationsEnabled ?? this.emailNotificationsEnabled,
       showOnlineStatus: showOnlineStatus ?? this.showOnlineStatus,
       readReceipts: readReceipts ?? this.readReceipts,
+      customStatus: customStatus ?? this.customStatus,
+      customStatusEmoji: customStatusEmoji ?? this.customStatusEmoji,
+      nextMeetingDate: nextMeetingDate ?? this.nextMeetingDate,
     );
   }
 
@@ -128,6 +141,9 @@ class UserProfile {
       emailNotificationsEnabled: emailNotificationsEnabled,
       showOnlineStatus: showOnlineStatus,
       readReceipts: readReceipts,
+      customStatus: customStatus,
+      customStatusEmoji: customStatusEmoji,
+      nextMeetingDate: nextMeetingDate,
     );
   }
 
@@ -156,6 +172,9 @@ class UserProfile {
       'emailNotificationsEnabled': emailNotificationsEnabled,
       'showOnlineStatus': showOnlineStatus,
       'readReceipts': readReceipts,
+      'customStatus': customStatus,
+      'customStatusEmoji': customStatusEmoji,
+      'nextMeetingDate': nextMeetingDate?.toIso8601String(),
     };
   }
 
@@ -184,6 +203,9 @@ class UserProfile {
       emailNotificationsEnabled: map['emailNotificationsEnabled'] ?? true,
       showOnlineStatus: map['showOnlineStatus'] ?? true,
       readReceipts: map['readReceipts'] ?? true,
+      customStatus: map['customStatus'],
+      customStatusEmoji: map['customStatusEmoji'],
+      nextMeetingDate: map['nextMeetingDate'] != null ? DateTime.tryParse(map['nextMeetingDate']) : null,
     );
   }
 }
