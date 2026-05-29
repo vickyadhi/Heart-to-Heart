@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <application
         android:label="h2h"
         android:name="${applicationName}"
@@ -26,6 +29,12 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Handle homewidget:// URI scheme for widget tap interactivity -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:scheme="homewidget"/>
+            </intent-filter>
         </activity>
         <!-- Native Love Widget Provider Registration -->
         <receiver android:name=".LoveWidgetProvider" android:exported="true">
@@ -50,6 +59,11 @@
             android:name="es.antonborri.home_widget.HomeWidgetBackgroundService" 
             android:permission="android.permission.BIND_JOB_SERVICE" 
             android:exported="true"/>
+
+        <!-- Default Notification Icon (Monochrome White Heart on transparent) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
 
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

@@ -3,23 +3,45 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ──────────────────────────────────────────────
+    // HELPER FUNCTIONS
+    // ──────────────────────────────────────────────
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    // Check if the user is part of a conversation
+    // convoId format: uid1_uid2 (lexicographic order)
+    function isConvoMember(convoId) {
+      let parts = convoId.split('_');
+      return parts[0] == request.auth.uid || parts[1] == request.auth.uid;
+    }
+
+    // ──────────────────────────────────────────────
+    // CONFIG (FCM Service Account — read-only for auth users)
+    // ──────────────────────────────────────────────
+    match /config/{docId} {
+      allow read: if isAuth();
+      allow write: if false; // Only writable from Firebase Console
+    }
+
+    // ──────────────────────────────────────────────
     // USER PROFILES
     // ──────────────────────────────────────────────
     match /users/{uid} {
-      // Any authenticated user can read their own profile, or if they are the partner of this user
-      allow read: if request.auth != null 
-        && (request.auth.uid == uid || resource.data.partnerUid == request.auth.uid);
-      
-      // Create: only the owner (on first sign-up / Google sign-in)
-      allow create: if request.auth != null && request.auth.uid == uid;
-      
-      // Update own profile
-      allow update: if request.auth != null && request.auth.uid == uid;
-      
-      // Partner can update certain fields on YOUR profile during pairing
-      // (setting partnerUid, partnerName, connectedAt on the code creator)
-      allow update: if request.auth != null 
-        && request.auth.uid != uid
+      // Owner can always read/write their own profile
+      allow read, write: if isAuth() && isOwner(uid);
+
+      // Any authenticated user can read another user's basic profile
+      // (needed to fetch partner info, fcmToken, battery level, etc.)
+      allow read: if isAuth();
+
+      // Partner can update pairing-related fields on your profile
+      allow update: if isAuth()
+        && !isOwner(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['partnerUid', 'partnerName', 'connectedAt', 'pairingCode', 'fcmToken']);
     }
@@ -28,39 +50,44 @@ service cloud.firestore {
     // PAIRING CODES
     // ──────────────────────────────────────────────
     match /pairing_codes/{code} {
-      // Any authenticated user can read a pairing code (to verify it)
-      allow read: if request.auth != null;
-      
-      // Only authenticated users can create a pairing code for themselves
-      allow create: if request.auth != null 
+      allow read: if isAuth();
+      allow create: if isAuth()
         && request.resource.data.creatorUid == request.auth.uid;
-      
-      // Allow updates (requester setting requesterUid, creator accepting/rejecting)
-      allow update: if request.auth != null;
-      
-      // Deleting pairing codes (after successful pairing)
-      allow delete: if request.auth != null;
+      allow update: if isAuth();
+      allow delete: if isAuth();
     }
 
     // ──────────────────────────────────────────────
     // CONVERSATIONS & LOVE EVENTS
     // ──────────────────────────────────────────────
     match /conversations/{convoId} {
-      // Allow if the authenticated user's UID appears in the convoId
-      // (convoId format: uid1_uid2 where uid1 < uid2 lexicographically)
-      allow read, write: if request.auth != null 
-        && (convoId.matches('.*' + request.auth.uid + '.*'));
-      
+      // Only the two users in the conversation can read/write
+      allow read, write: if isAuth() && isConvoMember(convoId);
+
       match /events/{eventId} {
-        allow read: if request.auth != null 
-          && (convoId.matches('.*' + request.auth.uid + '.*'));
-        
-        allow create: if request.auth != null 
-          && request.resource.data.senderId == request.auth.uid
-          && (convoId.matches('.*' + request.auth.uid + '.*'));
-        
-        allow delete: if request.auth != null
-          && (convoId.matches('.*' + request.auth.uid + '.*'));
+        // Both partners can read all events
+        allow read: if isAuth() && isConvoMember(convoId);
+
+        // Only the sender can create events
+        allow create: if isAuth()
+          && isConvoMember(convoId)
+          && request.resource.data.senderId == request.auth.uid;
+
+        // Either partner can delete events (cleanup)
+        allow delete: if isAuth() && isConvoMember(convoId);
+
+        // Allow update (e.g. reactions)
+        allow update: if isAuth() && isConvoMember(convoId);
+      }
+
+      // ── MESSAGES sub-collection ──
+      match /messages/{messageId} {
+        allow read: if isAuth() && isConvoMember(convoId);
+        allow create: if isAuth()
+          && isConvoMember(convoId)
+          && request.resource.data.senderId == request.auth.uid;
+        allow update: if isAuth() && isConvoMember(convoId);
+        allow delete: if isAuth() && isConvoMember(convoId);
       }
     }
   }

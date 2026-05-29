@@ -1,7 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_map/flutter_map.dart' as fm;
+import 'package:latlong2/latlong.dart';
 import '../models/love_event.dart';
 import '../services/auth_service.dart';
 import '../services/connection_service.dart';
@@ -12,6 +16,7 @@ import '../theme.dart';
 import 'chat_page.dart';
 import 'profile_page.dart';
 import 'pairing_page.dart';
+import 'love_draw_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -23,17 +28,7 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   int _currentIndex = 0;
   final GlobalKey<FloatingHeartsOverlayState> _heartsOverlayKey = GlobalKey<FloatingHeartsOverlayState>();
-
-  // Cute relationship tips for couples
-  final List<String> _coupleTips = [
-    "Distance is only temporary. Closer hearts beat as one! ❤️",
-    "Candlelight virtual dates: Sync your dinners this weekend! 🕯️",
-    "Share a song that perfectly defines your feelings today. 🎵",
-    "Surprise them with a quick voice note in the Chat tab! 🎙️",
-    "Write 3 things you are incredibly grateful for about your partner. ✍️",
-    "Little things matter: send a tap just to say you woke up! ☀️",
-  ];
-  int _currentTipIndex = 0;
+  bool _isNavigatingToPairing = false; // guard against repeated pushes
 
   // In-app alert notification banner state variables
   LoveEvent? _incomingAlertEvent;
@@ -103,11 +98,16 @@ class _DashboardPageState extends State<DashboardPage> {
 
     // Real-time unpairing navigation: if authenticated but unpaired, redirect to PairingPage immediately
     if (auth.isAuthenticated && !auth.isPaired) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const PairingPage()),
-        );
-      });
+      if (!_isNavigatingToPairing) {
+        _isNavigatingToPairing = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const PairingPage()),
+            );
+          }
+        });
+      }
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(color: AppTheme.primary),
@@ -339,7 +339,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ],
                   ),
 
-                  // Leaf/streak chip "For us" or dynamic badge matching mockup
+                  // Streak chip (removed 'For us')
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
@@ -349,14 +349,14 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.spa_rounded, color: Colors.green, size: 16),
+                        const Icon(Icons.local_fire_department_rounded, color: Colors.orange, size: 16),
                         const SizedBox(width: 6),
                         Text(
-                          'For us',
+                          '$streak 🔥',
                           style: TextStyle(fontFamily: 'Outfit', 
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
-                            color: Colors.green[700],
+                            color: Colors.orange[700],
                           ),
                         ),
                       ],
@@ -396,22 +396,18 @@ class _DashboardPageState extends State<DashboardPage> {
                   ThreeDEmojiButton(
                     onTap: () => _sendMoodTap(conn, 'miss_you', '🥺', 'Miss You'),
                     emoji: '🥺',
-                    label: 'Miss You',
                   ),
                   ThreeDEmojiButton(
                     onTap: () => _sendMoodTap(conn, 'sad', '😢', 'Sad'),
                     emoji: '😢',
-                    label: 'Sad',
                   ),
                   ThreeDEmojiButton(
                     onTap: () => _sendMoodTap(conn, 'excited', '🤩', 'Excited'),
                     emoji: '🤩',
-                    label: 'Excited',
                   ),
                   ThreeDEmojiButton(
                     onTap: () => _sendMoodTap(conn, 'thinking', '💭', 'Thinking'),
                     emoji: '💭',
-                    label: 'Thinking',
                   ),
                 ],
               ),
@@ -423,12 +419,15 @@ class _DashboardPageState extends State<DashboardPage> {
                 const SizedBox(height: 16),
                 _buildPartnerStatusCard(auth, conn, partnerName),
                 const SizedBox(height: 16),
+                _buildLoveDrawCard(conn, auth),
+                const SizedBox(height: 16),
+                _buildGPSMapCard(conn, auth),
+                const SizedBox(height: 16),
                 _buildNextMeetingCard(auth, conn),
+                const SizedBox(height: 16),
+                _buildStickyNotesCard(auth, conn, partnerName),
                 const SizedBox(height: 20),
               ],
-
-              // REDESIGNED DYNAMIC COUPLES SPARK CARD (Ultra Premium Adaptive Skeuomorphic UI, moved below Next Meeting)
-              _buildDailySparkCard(isSmallScreen),
 
               const SizedBox(height: 20),
 
@@ -475,7 +474,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         colors: [AppTheme.primary, AppTheme.accent],
                       ).createShader(bounds),
                       child: const Text(
-                        'heart to heart',
+                        'h2h',
                         style: TextStyle(
                           fontFamily: 'Outfit',
                           fontSize: 28,
@@ -1043,176 +1042,456 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildDailySparkCard(bool isSmallScreen) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentTipIndex = (_currentTipIndex + 1) % _coupleTips.length;
-        });
-        HapticFeedback.selectionClick();
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: isSmallScreen ? 14.0 : 20.0, 
-          vertical: isSmallScreen ? 14.0 : 18.0,
-        ),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFFFFEAEE), // Soft romantic sunset pink
-              Color(0xFFFFF5E4), // Gentle gold peach
-              Color(0xFFF2E7FF), // Soft lavender dream
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(isSmallScreen ? 20 : 28),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.9),
-            width: isSmallScreen ? 1.8 : 2.5,
-          ),
-          boxShadow: [
-            // Skeuomorphic drop shadow
-            BoxShadow(
-              color: AppTheme.primary.withOpacity(0.12),
-              blurRadius: 20,
-              spreadRadius: 2,
-              offset: const Offset(0, 8),
-            ),
-            // Inner highlight shadow (white reflection)
-            BoxShadow(
-              color: Colors.white.withOpacity(0.85),
-              blurRadius: 8,
-              offset: const Offset(-2, -2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // 3D Glowing Bulb Container
-            Container(
-              padding: EdgeInsets.all(isSmallScreen ? 8.0 : 12.0),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFFF9E80), // Vibrant peach-orange
-                    Color(0xFFFF5252), // Glowing coral-red
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+
+  Widget _buildLoveDrawCard(ConnectionService conn, AuthService auth) {
+    final latestEvent = conn.events.isNotEmpty 
+        ? conn.events.firstWhere((e) => e.type == 'love_draw', orElse: () => LoveEvent(id: '', senderId: '', receiverId: '', type: '', message: '', timestamp: DateTime.now())) 
+        : null;
+    
+    final hasDrawing = latestEvent != null && latestEvent.id.isNotEmpty;
+    final isFromPartner = hasDrawing && latestEvent.senderId != auth.currentUser?.uid;
+    final partnerName = auth.currentUser?.partnerName ?? 'Partner';
+    
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppTheme.premiumShadow,
+        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
                 ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFF5252).withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    spreadRadius: 1,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+                child: const Icon(
+                  Icons.palette_rounded,
+                  color: AppTheme.primary,
+                  size: 20,
+                ),
               ),
-              child: Icon(
-                Icons.lightbulb_rounded, // Solid lightbulb for premium feel
-                color: Colors.white,
-                size: isSmallScreen ? 18.0 : 22.0,
+              const SizedBox(width: 12),
+              Text(
+                'Love Draw 🎨',
+                style: GoogleFonts.fredoka(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              const Spacer(),
+              if (hasDrawing)
+                Text(
+                  isFromPartner ? 'New from $partnerName!' : 'Sent by you',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: isFromPartner ? AppTheme.primary : AppTheme.textLight,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (hasDrawing) ...[
+            Container(
+              height: 180,
+              decoration: BoxDecoration(
+                color: const Color(0xFF16121E),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Center(
+                child: Image.memory(
+                  base64Decode(latestEvent.message),
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header row with premium "NEW" or "SPARK" tag
-                  Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      Text(
-                        "Couple's Daily Spark",
-                        style: TextStyle(
-                          fontFamily: 'Outfit', 
-                          fontWeight: FontWeight.w900,
-                          fontSize: isSmallScreen ? 13.0 : 15.0,
-                          color: AppTheme.primaryDark,
-                          letterSpacing: 0.1,
-                        ),
+            const SizedBox(height: 16),
+          ],
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => LoveDrawPage(
+                    initialBase64Drawing: isFromPartner ? latestEvent.message : null,
+                  ),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+            ),
+            child: Text(
+              isFromPartner ? 'Reply & Draw Back!' : 'Start Drawing',
+              style: GoogleFonts.quicksand(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGPSMapCard(ConnectionService conn, AuthService auth) {
+    final lat = conn.partnerLatitude;
+    final lng = conn.partnerLongitude;
+    final partnerName = auth.currentUser?.partnerName ?? 'Partner';
+    final partnerGender = conn.partnerGender;
+    final partnerPhoto = conn.partnerPhotoUrl;
+    
+    final bool hasLocation = lat != null && lng != null;
+    
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppTheme.premiumShadow,
+        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.location_on_rounded,
+                  color: Colors.blue,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                "Partner's Location 📍",
+                style: GoogleFonts.fredoka(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              const Spacer(),
+              // Refresh button
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  conn.refreshPartnerLocation();
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.refresh_rounded, color: Colors.blue, size: 18),
+                ),
+              ),
+              if (hasLocation && conn.partnerLocationUpdatedAt != null) ...[
+                const SizedBox(width: 8),
+                Text(
+                  'Updated ${_formatLocationTime(conn.partnerLocationUpdatedAt!)}',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: AppTheme.textLight,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (!hasLocation)
+            Container(
+              height: 180,
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('📍', style: TextStyle(fontSize: 32)),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Waiting for $partnerName\'s location...',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppTheme.textLight,
+                        fontWeight: FontWeight.w500,
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [AppTheme.primary, AppTheme.accent],
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Container(
+              height: 180,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: fm.FlutterMap(
+                options: fm.MapOptions(
+                  initialCenter: LatLng(lat, lng),
+                  initialZoom: 14.5,
+                ),
+                children: [
+                  fm.TileLayer(
+                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.example.h2h',
+                  ),
+                  fm.MarkerLayer(
+                    markers: [
+                      fm.Marker(
+                        width: 50,
+                        height: 50,
+                        point: LatLng(lat, lng),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppTheme.primary, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 6,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Text(
-                          "SPARK ✨",
-                          style: TextStyle(
-                            fontFamily: 'Outfit',
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
+                          child: ClipOval(
+                            child: _buildPartnerMapAvatar(partnerPhoto, partnerGender ?? 'Other'),
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _coupleTips[_currentTipIndex],
-                    style: TextStyle(
-                      fontFamily: 'Inter', 
-                      fontSize: isSmallScreen ? 11.0 : 12.0,
-                      color: AppTheme.textDark,
-                      height: 1.45,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    "Tap to discover new inspiration • Let's talk! 💖",
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: isSmallScreen ? 8.5 : 9.5,
-                      color: AppTheme.textLight.withValues(alpha: 0.7),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.7),
-                shape: BoxShape.circle,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPartnerMapAvatar(String? photoUrl, String gender) {
+    if (photoUrl == null || photoUrl.isEmpty) {
+      return _genderEmojiContainer(gender);
+    }
+    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+      return Image.network(
+        photoUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (ctx, err, stack) => _genderEmojiContainer(gender),
+      );
+    }
+    try {
+      String base64Str = photoUrl;
+      if (photoUrl.contains(',')) {
+        base64Str = photoUrl.split(',').last;
+      }
+      return Image.memory(
+        base64Decode(base64Str),
+        fit: BoxFit.cover,
+        errorBuilder: (ctx, err, stack) => _genderEmojiContainer(gender),
+      );
+    } catch (e) {
+      return _genderEmojiContainer(gender);
+    }
+  }
+
+  Widget _genderEmojiContainer(String gender) {
+    String emoji = '👤';
+    Color bg = Colors.grey[200]!;
+    if (gender.toLowerCase() == 'male') {
+      emoji = '👦';
+      bg = Colors.blue[50]!;
+    } else if (gender.toLowerCase() == 'female') {
+      emoji = '👧';
+      bg = Colors.pink[50]!;
+    }
+    return Container(
+      color: bg,
+      alignment: Alignment.center,
+      child: Text(
+        emoji,
+        style: const TextStyle(fontSize: 20),
+      ),
+    );
+  }
+
+  // ─── STICKY NOTES ────────────────────────────────────────────────────────
+  Widget _buildStickyNotesCard(AuthService auth, ConnectionService conn, String partnerName) {
+    final myName = auth.currentUser?.displayName ?? 'Me';
+    final myNote = auth.currentUser?.stickyNote ?? '';
+    final partnerNote = conn.partnerStickyNote ?? '';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Text(
+            'Sticky Notes 📝',
+            style: GoogleFonts.fredoka(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textDark,
+            ),
+          ),
+        ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _buildStickyNote(
+                name: myName,
+                content: myNote,
+                color: const Color(0xFFFFF3C2), // warm yellow
+                nameColor: const Color(0xFFB87A00),
+                isEditable: true,
+                onSave: (text) => auth.updateStickyNote(text),
               ),
-              child: Icon(
-                Icons.arrow_forward_ios_rounded, 
-                color: AppTheme.primary, 
-                size: isSmallScreen ? 10.0 : 12.0,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStickyNote(
+                name: partnerName,
+                content: partnerNote,
+                color: const Color(0xFFD4F0FF), // soft blue
+                nameColor: const Color(0xFF0077AA),
+                isEditable: false,
+                onSave: null,
               ),
             ),
           ],
         ),
+      ],
+    );
+  }
+
+  Widget _buildStickyNote({
+    required String name,
+    required String content,
+    required Color color,
+    required Color nameColor,
+    required bool isEditable,
+    required Function(String)? onSave,
+  }) {
+    final controller = TextEditingController(text: content);
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.7),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.push_pin_rounded, size: 14, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                name,
+                style: TextStyle(
+                  fontFamily: 'Outfit',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                  color: nameColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (isEditable)
+            TextField(
+              controller: controller,
+              maxLines: 4,
+              minLines: 3,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 13,
+                color: Color(0xFF333333),
+                height: 1.5,
+              ),
+              decoration: const InputDecoration(
+                hintText: 'Write a note...',
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+                fillColor: Colors.transparent,
+                filled: true,
+              ),
+              onEditingComplete: () => onSave?.call(controller.text),
+              onTapOutside: (_) {
+                FocusScope.of(context).unfocus();
+                onSave?.call(controller.text);
+              },
+            )
+          else
+            Text(
+              content.isEmpty ? '(no note yet)' : content,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 13,
+                color: content.isEmpty ? Colors.grey : const Color(0xFF333333),
+                height: 1.5,
+                fontStyle: content.isEmpty ? FontStyle.italic : FontStyle.normal,
+              ),
+            ),
+        ],
       ),
     );
+  }
+
+  String _formatLocationTime(DateTime time) {
+    final diff = DateTime.now().difference(time);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+    if (diff.inHours < 24) return '${diff.inHours}h';
+    return '${diff.inDays}d';
   }
 }
 
 class ThreeDEmojiButton extends StatefulWidget {
   final VoidCallback onTap;
   final String emoji;
-  final String label;
 
   const ThreeDEmojiButton({
     super.key,
     required this.onTap,
     required this.emoji,
-    required this.label,
   });
 
   @override
@@ -1228,81 +1507,66 @@ class _ThreeDEmojiButtonState extends State<ThreeDEmojiButton> {
     final double activeDepth = _isPressed ? 1.5 : depth;
     final double translation = _isPressed ? depth - 1.5 : 0.0;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GestureDetector(
-          onTapDown: (_) => setState(() => _isPressed = true),
-          onTapUp: (_) => setState(() => _isPressed = false),
-          onTapCancel: () => setState(() => _isPressed = false),
-          onTap: widget.onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 60),
-            curve: Curves.easeOut,
-            transform: Matrix4.translationValues(0, translation, 0),
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white,
-                  Colors.grey[100]!,
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 60),
+        curve: Curves.easeOut,
+        transform: Matrix4.translationValues(0, translation, 0),
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: [
+              Colors.white,
+              Colors.grey[100]!,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border.all(
+            color: Colors.white,
+            width: 2.0,
+          ),
+          boxShadow: [
+            // Bottom dark 3D depth shadow matching theme primary accent
+            BoxShadow(
+              color: AppTheme.primary.withOpacity(0.18),
+              offset: Offset(0, activeDepth),
+              blurRadius: _isPressed ? 2.5 : 6.0,
+              spreadRadius: 0.5,
+            ),
+            if (!_isPressed)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                offset: const Offset(0, 1),
+                blurRadius: 1,
+              ),
+          ],
+        ),
+        child: Center(
+          child: Transform.scale(
+            scale: _isPressed ? 0.94 : 1.0,
+            child: Text(
+              widget.emoji,
+              style: TextStyle(
+                fontSize: 28,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withOpacity(0.12),
+                    offset: const Offset(0, 2),
+                    blurRadius: 2,
+                  ),
                 ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              border: Border.all(
-                color: Colors.white,
-                width: 2.0,
-              ),
-              boxShadow: [
-                // Bottom dark 3D depth shadow matching theme primary accent
-                BoxShadow(
-                  color: AppTheme.primary.withOpacity(0.18),
-                  offset: Offset(0, activeDepth),
-                  blurRadius: _isPressed ? 2.5 : 6.0,
-                  spreadRadius: 0.5,
-                ),
-                if (!_isPressed)
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    offset: const Offset(0, 1),
-                    blurRadius: 1,
-                  ),
-              ],
-            ),
-            child: Center(
-              child: Transform.scale(
-                scale: _isPressed ? 0.94 : 1.0,
-                child: Text(
-                  widget.emoji,
-                  style: TextStyle(
-                    fontSize: 28,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withOpacity(0.12),
-                        offset: const Offset(0, 2),
-                        blurRadius: 2,
-                      ),
-                    ],
-                  ),
-                ),
               ),
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          widget.label,
-          style: const TextStyle(
-            fontFamily: 'Outfit',
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: AppTheme.textDark,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

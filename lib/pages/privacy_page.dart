@@ -34,16 +34,6 @@ class PrivacyPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  'Your Privacy Matters 🔐',
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textDark,
-                  ),
-                ),
-                const SizedBox(height: 4),
                 Text(
                   'Last updated: May 28, 2026',
                   style: TextStyle(

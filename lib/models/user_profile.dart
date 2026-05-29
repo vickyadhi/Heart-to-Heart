@@ -29,6 +29,17 @@ class UserProfile {
   final String? customStatusEmoji;
   final DateTime? nextMeetingDate;
 
+  // Setup / Onboarding & GPS Coordinates additions
+  final String? gender; // 'Male', 'Female', or 'Other'
+  final String? dob;    // ISO Date format or plain text
+  final double? latitude;
+  final double? longitude;
+  final DateTime? locationUpdatedAt;
+  final bool setupComplete;
+
+  // Sticky notes — each user can write a note for both to see
+  final String? stickyNote;
+
   UserProfile({
     required this.uid,
     required this.displayName,
@@ -56,6 +67,13 @@ class UserProfile {
     this.customStatus,
     this.customStatusEmoji,
     this.nextMeetingDate,
+    this.gender,
+    this.dob,
+    this.latitude,
+    this.longitude,
+    this.locationUpdatedAt,
+    this.setupComplete = false,
+    this.stickyNote,
   });
 
   UserProfile copyWith({
@@ -85,6 +103,13 @@ class UserProfile {
     String? customStatus,
     String? customStatusEmoji,
     DateTime? nextMeetingDate,
+    String? gender,
+    String? dob,
+    double? latitude,
+    double? longitude,
+    DateTime? locationUpdatedAt,
+    bool? setupComplete,
+    String? stickyNote,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -113,6 +138,13 @@ class UserProfile {
       customStatus: customStatus ?? this.customStatus,
       customStatusEmoji: customStatusEmoji ?? this.customStatusEmoji,
       nextMeetingDate: nextMeetingDate ?? this.nextMeetingDate,
+      gender: gender ?? this.gender,
+      dob: dob ?? this.dob,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      locationUpdatedAt: locationUpdatedAt ?? this.locationUpdatedAt,
+      setupComplete: setupComplete ?? this.setupComplete,
+      stickyNote: stickyNote ?? this.stickyNote,
     );
   }
 
@@ -144,6 +176,13 @@ class UserProfile {
       customStatus: customStatus,
       customStatusEmoji: customStatusEmoji,
       nextMeetingDate: nextMeetingDate,
+      gender: gender,
+      dob: dob,
+      latitude: latitude,
+      longitude: longitude,
+      locationUpdatedAt: locationUpdatedAt,
+      setupComplete: setupComplete,
+      stickyNote: stickyNote,
     );
   }
 
@@ -175,6 +214,13 @@ class UserProfile {
       'customStatus': customStatus,
       'customStatusEmoji': customStatusEmoji,
       'nextMeetingDate': nextMeetingDate?.toIso8601String(),
+      'gender': gender,
+      'dob': dob,
+      'latitude': latitude,
+      'longitude': longitude,
+      'locationUpdatedAt': locationUpdatedAt?.toIso8601String(),
+      'setupComplete': setupComplete,
+      'stickyNote': stickyNote,
     };
   }
 
@@ -206,6 +252,13 @@ class UserProfile {
       customStatus: map['customStatus'],
       customStatusEmoji: map['customStatusEmoji'],
       nextMeetingDate: map['nextMeetingDate'] != null ? DateTime.tryParse(map['nextMeetingDate']) : null,
+      gender: map['gender'],
+      dob: map['dob'],
+      latitude: map['latitude'] != null ? (map['latitude'] as num).toDouble() : null,
+      longitude: map['longitude'] != null ? (map['longitude'] as num).toDouble() : null,
+      locationUpdatedAt: map['locationUpdatedAt'] != null ? DateTime.tryParse(map['locationUpdatedAt']) : null,
+      setupComplete: map['setupComplete'] ?? false,
+      stickyNote: map['stickyNote'],
     );
   }
 }

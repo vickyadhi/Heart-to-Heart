@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../theme.dart';
 import 'pairing_page.dart';
 import 'dashboard_page.dart';
+import 'info_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -120,6 +121,11 @@ class _LoginPageState extends State<LoginPage> {
         context,
         MaterialPageRoute(builder: (_) => const PairingPage()),
       );
+    } else if (authService.currentUser?.setupComplete != true) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const InfoPage()),
+      );
     } else {
       Navigator.pushReplacement(
         context,
@@ -158,52 +164,14 @@ class _LoginPageState extends State<LoginPage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Premium Vector Overlapping Double Heart Logo matching Image 5
-                          Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              color: AppTheme.primary,
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.primary.withOpacity(0.3),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                // Large main white heart
-                                Positioned(
-                                  top: 16,
-                                  left: 16,
-                                  child: const Icon(
-                                    Icons.favorite_rounded,
-                                    color: Colors.white,
-                                    size: 58,
-                                  ),
-                                ),
-                                // Cutout spacing circle and nested small heart
-                                Positioned(
-                                  bottom: 10,
-                                  right: 10,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: AppTheme.primary,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.favorite_rounded,
-                                      color: Colors.white,
-                                      size: 38,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                          // Premium Flat Logo (Single Heart on Gradient, no box)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: Image.asset(
+                              'assets/images/app_logo_flat.png',
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
                             ),
                           ),
                           const SizedBox(height: 14),
@@ -392,14 +360,7 @@ class _LoginPageState extends State<LoginPage> {
                                 foregroundColor: AppTheme.textDark,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.g_mobiledata_rounded, size: 28, color: Colors.red),
-                                  const SizedBox(width: 4),
-                                  Text('Continue with Google', style: TextStyle(fontFamily: 'Outfit', fontSize: 14, fontWeight: FontWeight.bold)),
-                                ],
-                              ),
+                              child: const Text('Continue with Google', style: TextStyle(fontFamily: 'Outfit', fontSize: 14, fontWeight: FontWeight.bold)),
                             ),
                           ),
                         ],

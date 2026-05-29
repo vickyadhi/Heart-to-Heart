@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import '../services/connection_service.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
-import 'dashboard_page.dart';
 import 'login_page.dart';
+import 'info_page.dart';
 
 class PairingPage extends StatefulWidget {
   const PairingPage({super.key});
@@ -70,7 +70,7 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
           
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const DashboardPage()),
+            MaterialPageRoute(builder: (_) => const InfoPage()),
           );
         }
       });
@@ -416,14 +416,13 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                   const Spacer(flex: 3),
 
                   // Re-generate button
-                  TextButton.icon(
+                  TextButton(
                     onPressed: conn.isGeneratingCode ? null : () => conn.generatePairingCode(),
                     style: TextButton.styleFrom(
                       foregroundColor: AppTheme.textLight,
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),
-                    icon: const Icon(Icons.autorenew_rounded, size: 20, color: AppTheme.primary),
-                    label: const Text(
+                    child: const Text(
                       'Generate new code',
                       style: TextStyle(fontFamily: 'Outfit', 
                         color: AppTheme.textDark,

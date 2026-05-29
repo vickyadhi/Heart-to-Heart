@@ -4,98 +4,115 @@
     android:layout_height="match_parent"
     android:orientation="horizontal"
     android:background="@drawable/widget_background"
-    android:padding="16dp"
+    android:padding="12dp"
     android:gravity="center_vertical">
 
-    <!-- LEFT COLUMN: Partner Connection Details -->
+    <!-- LEFT COLUMN: Partner Connection Details (Interactive Badge + Text Info) -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1.2"
-        android:orientation="vertical">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
+        <!-- Clickable Main Heart Badge with Premium Glassmorphism -->
+        <TextView
+            android:id="@+id/widget_main_heart"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="❤️"
+            android:textSize="22sp"
+            android:gravity="center"
+            android:background="@drawable/widget_emoji_bg"
+            android:focusable="true"
+            android:clickable="true" />
+
+        <!-- Partner Names & Last Heart Info -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:orientation="vertical"
+            android:layout_marginLeft="10dp"
             android:gravity="center_vertical">
-
-            <TextView
-                android:id="@+id/widget_main_heart"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="❤️"
-                android:textSize="18sp"
-                android:padding="6dp" />
 
             <TextView
                 android:id="@+id/widget_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="6dp"
                 android:text="Partner"
-                android:textColor="#2C2525"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-        </LinearLayout>
+                android:textColor="#FFFFFF"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
 
-        <TextView
-          android:id="@+id/widget_status"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_marginTop="4dp"
-          android:text="Misses you 🥺"
-          android:textColor="#7A6E70"
-          android:textSize="12sp"
-          android:textStyle="italic" />
+            <TextView
+                android:id="@+id/widget_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:text="No taps received yet 🥺"
+                android:textColor="#E6FFFFFF"
+                android:textSize="11sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif" />
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- RIGHT SECTION: Emojis Shortcut Indicators -->
+    <!-- RIGHT SECTION: Emojis Shortcut Indicators (Sleek Glassmorphic Tap Buttons) -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginLeft="8dp">
+        android:layout_marginLeft="6dp">
 
         <TextView
             android:id="@+id/widget_emoji_miss_you"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:text="🥺"
-            android:textSize="20sp"
+            android:textSize="21sp"
             android:gravity="center"
             android:background="@drawable/widget_emoji_bg"
-            android:layout_margin="3dp"/>
+            android:layout_margin="2dp"
+            android:focusable="true"
+            android:clickable="true" />
 
         <TextView
             android:id="@+id/widget_emoji_sad"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:text="😢"
-            android:textSize="20sp"
+            android:textSize="21sp"
             android:gravity="center"
             android:background="@drawable/widget_emoji_bg"
-            android:layout_margin="3dp"/>
+            android:layout_margin="2dp"
+            android:focusable="true"
+            android:clickable="true" />
 
         <TextView
             android:id="@+id/widget_emoji_excited"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:text="🤩"
-            android:textSize="20sp"
+            android:textSize="21sp"
             android:gravity="center"
             android:background="@drawable/widget_emoji_bg"
-            android:layout_margin="3dp"/>
+            android:layout_margin="2dp"
+            android:focusable="true"
+            android:clickable="true" />
 
         <TextView
             android:id="@+id/widget_emoji_thinking"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:text="💭"
-            android:textSize="20sp"
+            android:textSize="21sp"
             android:gravity="center"
             android:background="@drawable/widget_emoji_bg"
-            android:layout_margin="3dp"/>
+            android:layout_margin="2dp"
+            android:focusable="true"
+            android:clickable="true" />
     </LinearLayout>
 </LinearLayout>

@@ -1,20 +1,91 @@
 import 'dart:ui';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:image_picker/image_picker.dart';
 import '../theme.dart';
 import '../services/auth_service.dart';
 import 'login_page.dart';
 import 'pairing_page.dart';
-import 'name_page.dart';
 import 'help_page.dart';
 import 'terms_page.dart';
 import 'privacy_page.dart';
 import 'contact_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   final String partnerName;
 
   const ProfilePage({super.key, required this.partnerName});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  bool _isUploadingImage = false;
+
+  ImageProvider? _getAvatarProvider(String? photoUrl) {
+    if (photoUrl == null || photoUrl.isEmpty) return null;
+    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+      return NetworkImage(photoUrl);
+    }
+    try {
+      String base64Str = photoUrl;
+      if (photoUrl.contains(',')) {
+        base64Str = photoUrl.split(',').last;
+      }
+      return MemoryImage(base64Decode(base64Str));
+    } catch (e) {
+      print('Error decoding avatar Base64: $e');
+      return null;
+    }
+  }
+
+  Future<void> _pickAndUploadImage(BuildContext context, AuthService auth) async {
+    final picker = ImagePicker();
+    try {
+      final XFile? pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 120,
+        maxHeight: 120,
+        imageQuality: 80,
+      );
+      if (pickedFile != null) {
+        setState(() => _isUploadingImage = true);
+        final bytes = await pickedFile.readAsBytes();
+        final base64Image = base64Encode(bytes);
+        
+        await auth.updateProfilePicture(base64Image);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile picture updated! 💖', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating profile picture: $e', style: const TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
+            backgroundColor: AppTheme.primary,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingImage = false);
+      }
+    }
+  }
+
 
   void _showUnpairBottomSheet(BuildContext context, AuthService auth) {
     showDialog(
@@ -196,110 +267,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  void _showChangePasswordDialog(BuildContext context, AuthService auth) {
-    final passwordController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
 
-    showDialog(
-      context: context,
-      builder: (BuildContext ctx) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          backgroundColor: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Change Password 🔐',
-                    style: TextStyle(
-                      fontFamily: 'Outfit',
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: passwordController,
-                    obscureText: true,
-                    style: const TextStyle(color: AppTheme.textDark, fontSize: 14),
-                    decoration: InputDecoration(
-                      hintText: 'Enter new password',
-                      hintStyle: TextStyle(fontFamily: 'Inter', color: AppTheme.textLight.withOpacity(0.5)),
-                      prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppTheme.textLight, size: 20),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    validator: (val) {
-                      if (val == null || val.trim().isEmpty) return 'Password cannot be empty';
-                      if (val.trim().length < 6) return 'Must be at least 6 characters';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          ),
-                          child: const Text('Cancel'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            if (!formKey.currentState!.validate()) return;
-                            Navigator.pop(ctx);
-                            try {
-                              await auth.changePassword(passwordController.text.trim());
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text('Password changed successfully! 🎉', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
-                                    backgroundColor: Colors.green[600],
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Failed: $e', style: const TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
-                                    backgroundColor: AppTheme.primary,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            backgroundColor: AppTheme.primary,
-                          ),
-                          child: const Text('Save'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -360,23 +328,56 @@ class ProfilePage extends StatelessWidget {
                       padding: const EdgeInsets.all(2.5),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.primary.withOpacity(0.12), width: 2),
+                        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.12), width: 2),
                       ),
-                      child: CircleAvatar(
-                        radius: 24,
-                        backgroundColor: AppTheme.accent.withOpacity(0.1),
-                        backgroundImage: myAvatarUrl != null ? NetworkImage(myAvatarUrl) : null,
-                        child: myAvatarUrl == null
-                            ? Text(
-                                myName.isNotEmpty ? myName[0].toUpperCase() : 'K',
-                                style: const TextStyle(
-                                  fontFamily: 'Outfit',
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.primary,
-                                  fontSize: 18,
-                                ),
-                              )
-                            : null,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: _isUploadingImage ? null : () => _pickAndUploadImage(context, auth),
+                            child: CircleAvatar(
+                              radius: 24,
+                              backgroundColor: AppTheme.accent.withValues(alpha: 0.1),
+                              backgroundImage: _getAvatarProvider(myAvatarUrl),
+                              child: _isUploadingImage
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppTheme.primary,
+                                      ),
+                                    )
+                                  : (myAvatarUrl == null
+                                      ? Text(
+                                          myName.isNotEmpty ? myName[0].toUpperCase() : 'K',
+                                          style: const TextStyle(
+                                            fontFamily: 'Outfit',
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.primary,
+                                            fontSize: 18,
+                                          ),
+                                        )
+                                      : null),
+                            ),
+                          ),
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(3),
+                              decoration: const BoxDecoration(
+                                color: AppTheme.primary,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt_rounded,
+                                color: Colors.white,
+                                size: 8,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -518,150 +519,155 @@ class ProfilePage extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
-
-                // Edit Details and Unpair Buttons Row
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const NamePage(isEditing: true)),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          elevation: 0,
-                        ),
-                        child: const Text(
-                          'Edit Details',
-                          style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => _showUnpairBottomSheet(context, auth),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.primary,
-                          side: BorderSide(color: AppTheme.primary.withOpacity(0.3), width: 1.5),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        ),
-                        child: const Text(
-                          'Unpair',
-                          style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 14),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
-          // ─── CARD 2: PUSH NOTIFICATIONS SETTINGS (Exactly matches img 1) ───
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-              border: Border.all(color: Colors.black.withOpacity(0.03)),
+          // ─── GROUP 1: ACCOUNT SETTINGS ───
+          _buildSettingsGroup('Account', [
+            _buildNavigationTile(
+              icon: HugeIcons.strokeRoundedUserCircle,
+              iconColor: AppTheme.primary,
+              title: 'Personal Information',
+              subtitle: 'Update DOB, gender, anniversary, and password',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const PersonalInformationPage()),
+                );
+              },
             ),
-            child: Column(
-              children: [
-                _buildSwitchTile(
-                  title: 'Push Notifications',
-                  subtitle: 'Receive notifications instantly',
-                  value: user?.pushNotificationsEnabled ?? true,
-                  onChanged: (val) => auth.updateSetting('pushNotificationsEnabled', val),
-                ),
-                _buildDivider(),
-                _buildSwitchTile(
-                  title: 'Sound',
-                  subtitle: 'Play sound for notifications',
-                  value: user?.soundEnabled ?? true,
-                  onChanged: (val) => auth.updateSetting('soundEnabled', val),
-                ),
-                _buildDivider(),
-                _buildSwitchTile(
-                  title: 'Vibration',
-                  subtitle: 'Vibrate on new messages',
-                  value: user?.vibrationEnabled ?? true,
-                  onChanged: (val) => auth.updateSetting('vibrationEnabled', val),
-                ),
-                _buildDivider(),
-                _buildSwitchTile(
-                  title: 'Email Notifications',
-                  subtitle: 'Get update via email',
-                  value: user?.emailNotificationsEnabled ?? true,
-                  onChanged: (val) => auth.updateSetting('emailNotificationsEnabled', val),
-                ),
-              ],
+            _buildDivider(),
+            _buildNavigationTile(
+              icon: HugeIcons.strokeRoundedUserBlock01,
+              iconColor: Colors.redAccent,
+              title: 'Unpair Partner',
+              subtitle: 'Disconnect your account from your partner',
+              onTap: () => _showUnpairBottomSheet(context, auth),
             ),
-          ),
-          const SizedBox(height: 20),
+          ]),
 
-          // ─── CARD 3: PRIVACY & SECURITY SETTINGS (Exactly matches img 1) ───
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-              border: Border.all(color: Colors.black.withOpacity(0.03)),
-            ),
-            child: Column(
-              children: [
-                _buildSwitchTile(
-                  title: 'Show Online Status',
-                  subtitle: "Let partner see when you're online",
-                  value: user?.showOnlineStatus ?? true,
-                  onChanged: (val) => auth.updateSetting('showOnlineStatus', val),
-                ),
-                _buildDivider(),
-                _buildSwitchTile(
-                  title: 'Read Receipts',
-                  subtitle: "Show when you've seen messages",
-                  value: user?.readReceipts ?? true,
-                  onChanged: (val) => auth.updateSetting('readReceipts', val),
-                ),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () => _showChangePasswordDialog(context, auth),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.primary,
-                        side: BorderSide(color: AppTheme.primary.withOpacity(0.3), width: 1.5),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                // ─── GROUP 2: PREFERENCES ───
+                _buildSettingsGroup('Preferences', [
+                  _buildSwitchTile(
+                    icon: HugeIcons.strokeRoundedNotification02,
+                    iconColor: AppTheme.primary,
+                    title: 'Push Notifications',
+                    subtitle: 'Receive notifications instantly',
+                    value: user?.pushNotificationsEnabled ?? true,
+                    onChanged: (val) => auth.updateSetting('pushNotificationsEnabled', val),
+                  ),
+                  _buildDivider(),
+                  _buildSwitchTile(
+                    icon: HugeIcons.strokeRoundedVolumeMute01,
+                    iconColor: AppTheme.primary,
+                    title: 'Sound',
+                    subtitle: 'Play sound for notifications',
+                    value: user?.soundEnabled ?? true,
+                    onChanged: (val) => auth.updateSetting('soundEnabled', val),
+                  ),
+                  _buildDivider(),
+                  _buildSwitchTile(
+                    icon: HugeIcons.strokeRoundedSmartPhone01,
+                    iconColor: AppTheme.primary,
+                    title: 'Vibration',
+                    subtitle: 'Vibrate on new messages',
+                    value: user?.vibrationEnabled ?? true,
+                    onChanged: (val) => auth.updateSetting('vibrationEnabled', val),
+                  ),
+                ]),
+
+                // ─── GROUP 3: PRIVACY ───
+                _buildSettingsGroup('Privacy', [
+                  _buildSwitchTile(
+                    icon: HugeIcons.strokeRoundedEye,
+                    iconColor: AppTheme.primary,
+                    title: 'Show Online Status',
+                    subtitle: "Let partner see when you're online",
+                    value: user?.showOnlineStatus ?? true,
+                    onChanged: (val) => auth.updateSetting('showOnlineStatus', val),
+                  ),
+                  _buildDivider(),
+                  _buildSwitchTile(
+                    icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+                    iconColor: AppTheme.primary,
+                    title: 'Read Receipts',
+                    subtitle: "Show when you've seen messages",
+                    value: user?.readReceipts ?? true,
+                    onChanged: (val) => auth.updateSetting('readReceipts', val),
+                  ),
+                ]),
+
+                // ─── GROUP 4: HELP & LEGAL ───
+                _buildSettingsGroup('Help & Support', [
+                  _buildSupportTile(context, 'Help Center',
+                      HugeIcons.strokeRoundedHelpCircle, AppTheme.primary),
+                  _buildDivider(),
+                  _buildSupportTile(context, 'Terms of Service',
+                      HugeIcons.strokeRoundedFile01, AppTheme.primary),
+                  _buildDivider(),
+                  _buildSupportTile(context, 'Privacy Policy',
+                      HugeIcons.strokeRoundedShieldKey, AppTheme.primary),
+                  _buildDivider(),
+                  _buildSupportTile(context, 'Contact Support',
+                      HugeIcons.strokeRoundedCustomerService01, AppTheme.primary),
+                ]),
+
+                const SizedBox(height: 20),
+
+                // Footer Text Details
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        'Heart 2 Heart v1.0.0',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          fontSize: 11,
+                          color: AppTheme.textLight.withOpacity(0.6),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                      child: const Text(
-                        'Change Password',
-                        style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 13),
+                      const SizedBox(height: 3),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Made with ',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 10,
+                              color: AppTheme.textLight.withOpacity(0.5),
+                            ),
+                          ),
+                          const Icon(Icons.favorite_rounded, color: AppTheme.primary, size: 10),
+                          Text(
+                            ' for long-distance couples',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 10,
+                              color: AppTheme.textLight.withOpacity(0.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Center Logout Text Link
+                Center(
+                  child: InkWell(
+                    onTap: () => _showLogoutBottomSheet(context, auth),
+                    child: const Text(
+                      'Logout',
+                      style: TextStyle(
+                        fontFamily: 'Outfit',
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primary,
                       ),
                     ),
                   ),
@@ -669,110 +675,53 @@ class ProfilePage extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 20),
+        );
+      }
 
-          // ─── CARD 4: HELP & SUPPORT SECTION (Exactly matches img 1) ───
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-              border: Border.all(color: Colors.black.withOpacity(0.03)),
-            ),
-            child: Column(
-              children: [
-                _buildSupportTile(context, 'Help Center'),
-                _buildDivider(),
-                _buildSupportTile(context, 'Terms of Service'),
-                _buildDivider(),
-                _buildSupportTile(context, 'Privacy Policy'),
-                _buildDivider(),
-                _buildSupportTile(context, 'Contact Support'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Footer Text Details (Exactly matches img 1)
-          Center(
-            child: Column(
-              children: [
-                Text(
-                  'Heart 2 Heart v1.0.0',
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    fontSize: 11,
-                    color: AppTheme.textLight.withOpacity(0.6),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Made with ',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 10,
-                        color: AppTheme.textLight.withOpacity(0.5),
-                      ),
-                    ),
-                    const Icon(Icons.favorite_rounded, color: AppTheme.primary, size: 10),
-                    Text(
-                      ' for long-distance couples',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 10,
-                        color: AppTheme.textLight.withOpacity(0.5),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
-
-          // ─── Center Logout Text Link (Exactly matches bottom of img 1) ───
-          Center(
-            child: InkWell(
-              onTap: () => _showLogoutBottomSheet(context, auth),
-              child: const Text(
-                'Logout',
-                style: TextStyle(
-                  fontFamily: 'Outfit',
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primary,
-                ),
-              ),
-            ),
+  Widget _buildSettingsCard(List<Widget> children) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.025),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
       ),
-    ),
-  );
-}
+      child: Column(children: children),
+    );
+  }
 
   Widget _buildSwitchTile({
+    required List<List<dynamic>> icon,
+    required Color iconColor,
     required String title,
     required String subtitle,
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Icon badge
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: HugeIcon(icon: icon, color: iconColor, size: 20),
+            ),
+          ),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -792,7 +741,7 @@ class ProfilePage extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 11,
-                    color: AppTheme.textLight.withOpacity(0.7),
+                    color: AppTheme.textLight.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -801,19 +750,27 @@ class ProfilePage extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppTheme.primary,
-            activeTrackColor: AppTheme.primary.withOpacity(0.18),
-            inactiveThumbColor: const Color(0xFFD0C4C6),
-            inactiveTrackColor: const Color(0xFFF3EBEC),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSupportTile(BuildContext context, String title) {
+  Widget _buildSupportTile(BuildContext context, String title,
+      List<List<dynamic>> icon, Color iconColor) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      leading: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: iconColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Center(
+          child: HugeIcon(icon: icon, color: iconColor, size: 20),
+        ),
+      ),
       title: Text(
         title,
         style: const TextStyle(
@@ -825,7 +782,7 @@ class ProfilePage extends StatelessWidget {
       ),
       trailing: Icon(
         Icons.chevron_right_rounded,
-        color: AppTheme.textLight.withOpacity(0.4),
+        color: AppTheme.textLight.withValues(alpha: 0.4),
         size: 18,
       ),
       onTap: () {
@@ -853,6 +810,542 @@ class ProfilePage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Divider(color: AppTheme.textLight.withOpacity(0.05), height: 1),
+    );
+  }
+
+  Widget _buildSettingsGroup(String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 8, bottom: 8, top: 12),
+          child: Text(
+            title.toUpperCase(),
+            style: GoogleFonts.fredoka(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.primary.withValues(alpha: 0.75),
+              letterSpacing: 1.0,
+            ),
+          ),
+        ),
+        _buildSettingsCard(children),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildNavigationTile({
+    required List<List<dynamic>> icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      leading: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: iconColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Center(
+          child: HugeIcon(icon: icon, color: iconColor, size: 20),
+        ),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          fontFamily: 'Outfit',
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: AppTheme.textDark,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 11,
+          color: AppTheme.textLight.withValues(alpha: 0.7),
+        ),
+      ),
+      trailing: Icon(
+        Icons.chevron_right_rounded,
+        color: AppTheme.textLight.withValues(alpha: 0.4),
+        size: 18,
+      ),
+      onTap: onTap,
+    );
+  }
+}
+
+class PersonalInformationPage extends StatefulWidget {
+  const PersonalInformationPage({super.key});
+
+  @override
+  State<PersonalInformationPage> createState() => _PersonalInformationPageState();
+}
+
+class _PersonalInformationPageState extends State<PersonalInformationPage> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  DateTime? _dob;
+  DateTime? _anniversary;
+  String? _gender;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final user = auth.currentUser;
+    _nameController = TextEditingController(text: user?.displayName ?? '');
+    _gender = user?.gender;
+    if (user != null && user.dob != null) {
+      _dob = DateTime.tryParse(user.dob!);
+    }
+    _anniversary = user?.anniversaryDate;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context, bool isDob) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(Duration(days: isDob ? 365 * 20 : 365)),
+      firstDate: DateTime(1950),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppTheme.primary,
+              onPrimary: Colors.white,
+              onSurface: AppTheme.textDark,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        if (isDob) {
+          _dob = picked;
+        } else {
+          _anniversary = picked;
+        }
+      });
+    }
+  }
+
+  Future<void> _saveChanges() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_dob == null || _gender == null || _anniversary == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all details!')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final auth = Provider.of<AuthService>(context, listen: false);
+      await auth.completeSetup(
+        name: _nameController.text.trim(),
+        gender: _gender!,
+        dob: _dob!.toIso8601String().split('T').first,
+        anniversaryDate: _anniversary!,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully!', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
+            backgroundColor: Color(0xFF2E7D32),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update details: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showChangePasswordDialog(BuildContext context, AuthService auth) {
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+          backgroundColor: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Change Password',
+                    style: GoogleFonts.fredoka(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: true,
+                    style: const TextStyle(color: AppTheme.textDark, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Enter new password',
+                      hintStyle: TextStyle(fontFamily: 'Inter', color: AppTheme.textLight.withOpacity(0.5)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) return 'Password cannot be empty';
+                      if (val.trim().length < 6) return 'Must be at least 6 characters';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            if (!formKey.currentState!.validate()) return;
+                            Navigator.pop(ctx);
+                            try {
+                              await auth.changePassword(passwordController.text.trim());
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Password changed successfully!', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
+                                    backgroundColor: Color(0xFF2E7D32),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $e')),
+                                );
+                              }
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            backgroundColor: AppTheme.primary,
+                          ),
+                          child: const Text('Change', style: TextStyle(color: Colors.white)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = Provider.of<AuthService>(context);
+    
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAFAFC),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppTheme.textDark),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'Personal Information',
+          style: GoogleFonts.quicksand(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textDark,
+          ),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Display Name Field
+              Text(
+                'How should your partner call you?',
+                style: GoogleFonts.quicksand(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _nameController,
+                style: GoogleFonts.inter(fontSize: 15),
+                decoration: InputDecoration(
+                  hintText: 'e.g., Vicky, Katija...',
+                  fillColor: Colors.white,
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter your name!';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+
+              // Gender Field
+              Text(
+                'Gender',
+                style: GoogleFonts.quicksand(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildGenderCard(
+                      label: 'Male',
+                      imagePath: 'assets/images/male_avatar_3d.png',
+                      isSelected: _gender == 'Male',
+                      onTap: () => setState(() => _gender = 'Male'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildGenderCard(
+                      label: 'Female',
+                      imagePath: 'assets/images/female_avatar_3d.png',
+                      isSelected: _gender == 'Female',
+                      onTap: () => setState(() => _gender = 'Female'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // DOB Field
+              Text(
+                'Date of Birth',
+                style: GoogleFonts.quicksand(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildDatePickerButton(
+                label: _dob == null
+                    ? 'Select Date of Birth'
+                    : 'DOB: ${_dob!.toIso8601String().split('T').first}',
+                isSelected: _dob != null,
+                onTap: () => _selectDate(context, true),
+              ),
+              const SizedBox(height: 20),
+
+              // Anniversary Field
+              Text(
+                'Relationship Anniversary Date',
+                style: GoogleFonts.quicksand(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildDatePickerButton(
+                label: _anniversary == null
+                    ? 'Select Anniversary Date'
+                    : 'Anniversary: ${_anniversary!.toIso8601String().split('T').first}',
+                isSelected: _anniversary != null,
+                onTap: () => _selectDate(context, false),
+              ),
+              const SizedBox(height: 32),
+
+              // Change Password Button (inside Personal Info sub-screen)
+              OutlinedButton(
+                onPressed: () => _showChangePasswordDialog(context, auth),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primary,
+                  side: BorderSide(color: AppTheme.primary.withOpacity(0.3), width: 1.5),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text(
+                  'Change Password',
+                  style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Save Button (no emojis)
+              ElevatedButton(
+                onPressed: _isLoading ? null : _saveChanges,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: AppTheme.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : const Text(
+                        'Save Changes',
+                        style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGenderCard({
+    required String label,
+    required String imagePath,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primary : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppTheme.primary : Colors.white.withOpacity(0.8),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? AppTheme.primary.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Image.asset(
+              imagePath,
+              width: 50,
+              height: 50,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: GoogleFonts.quicksand(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? Colors.white : AppTheme.textDark,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDatePickerButton({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppTheme.primary.withOpacity(0.4) : Colors.black.withOpacity(0.08),
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected ? AppTheme.textDark : AppTheme.textLight.withOpacity(0.7),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -2,9 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../theme.dart';
 import 'login_page.dart';
 import 'pairing_page.dart';
 import 'dashboard_page.dart';
+import 'info_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -73,6 +75,11 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
         context,
         MaterialPageRoute(builder: (_) => const PairingPage()),
       );
+    } else if (authService.currentUser?.setupComplete != true) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const InfoPage()),
+      );
     } else {
       Navigator.pushReplacement(
         context,
@@ -103,44 +110,13 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   }
 
   Widget _buildLogo() {
-    return Container(
-      width: 110,
-      height: 110,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.18),
-        borderRadius: BorderRadius.circular(26),
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Large main white heart
-          Positioned(
-            top: 18,
-            left: 18,
-            child: const Icon(
-              Icons.favorite_rounded,
-              color: Colors.white,
-              size: 64,
-            ),
-          ),
-          // Theme-colored cutout backing ring and small heart
-          Positioned(
-            bottom: 11,
-            right: 11,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF34D5F), // Match splash background color perfectly!
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.favorite_rounded,
-                color: Colors.white,
-                size: 40,
-              ),
-            ),
-          ),
-        ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(26),
+      child: Image.asset(
+        'assets/images/app_logo_flat.png',
+        width: 110,
+        height: 110,
+        fit: BoxFit.cover,
       ),
     );
   }
@@ -148,7 +124,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF34D5F),
+      backgroundColor: AppTheme.primary,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final w = constraints.maxWidth;

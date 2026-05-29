@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Romantic Theme Palette Colors
-  static const Color primary = Color(0xFFF34D5F);      // Sweet Crimson Rose
-  static const Color primaryDark = Color(0xFFD83042);  // Rich Crimson
+  static const Color primary = Color(0xFFF05053);      // Sweet Crimson Rose (F05053)
+  static const Color primaryDark = Color(0xFFD03B3E);  // Rich Crimson
   static const Color accent = Color(0xFFFF8FA2);       // Sweet Blush Pink
   static const Color backgroundStart = Color(0xFFFFEAEE); // Soft Sunset Pink
   static const Color backgroundEnd = Color(0xFFF5E4FF);   // Lavender Dream
@@ -40,7 +41,7 @@ class AppTheme {
   // Visual card shadow
   static List<BoxShadow> get premiumShadow => [
     BoxShadow(
-      color: const Color(0xFFF34D5F).withValues(alpha: 0.06),
+      color: const Color(0xFFF05053).withValues(alpha: 0.06),
       spreadRadius: 2,
       blurRadius: 16,
       offset: const Offset(0, 8),
@@ -55,7 +56,7 @@ class AppTheme {
 
   static List<BoxShadow> get buttonShadow => [
     BoxShadow(
-      color: const Color(0xFFF34D5F).withValues(alpha: 0.3),
+      color: const Color(0xFFF05053).withValues(alpha: 0.3),
       spreadRadius: 1,
       blurRadius: 12,
       offset: const Offset(0, 6),
@@ -75,49 +76,41 @@ class AppTheme {
       ),
       fontFamily: 'Outfit',
       scaffoldBackgroundColor: const Color(0xFFFFF9FA),
-      textTheme: const TextTheme(
-        displayLarge: TextStyle(
-          fontFamily: 'Outfit',
+      textTheme: TextTheme(
+        displayLarge: GoogleFonts.fredoka(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textDark,
         ),
-        displayMedium: TextStyle(
-          fontFamily: 'Outfit',
+        displayMedium: GoogleFonts.fredoka(
           fontSize: 26,
           fontWeight: FontWeight.bold,
           color: textDark,
         ),
-        displaySmall: TextStyle(
-          fontFamily: 'Outfit',
+        displaySmall: GoogleFonts.fredoka(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textDark,
         ),
-        headlineMedium: TextStyle(
-          fontFamily: 'Outfit',
+        headlineMedium: GoogleFonts.fredoka(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textDark,
         ),
-        titleLarge: TextStyle(
-          fontFamily: 'Outfit',
+        titleLarge: GoogleFonts.quicksand(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: textDark,
         ),
-        bodyLarge: TextStyle(
-          fontFamily: 'Outfit',
+        bodyLarge: GoogleFonts.inter(
           fontSize: 15,
           color: textDark,
         ),
-        bodyMedium: TextStyle(
-          fontFamily: 'Outfit',
+        bodyMedium: GoogleFonts.inter(
           fontSize: 13,
           color: textLight,
         ),
-        labelLarge: TextStyle(
-          fontFamily: 'Outfit',
+        labelLarge: GoogleFonts.quicksand(
           fontSize: 14,
           fontWeight: FontWeight.bold,
           color: Colors.white,
@@ -128,7 +121,7 @@ class AppTheme {
           backgroundColor: primary,
           foregroundColor: Colors.white,
           elevation: 2,
-          shadowColor: Color(0x4DF34D5F),
+          shadowColor: const Color(0x4DF05053),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),

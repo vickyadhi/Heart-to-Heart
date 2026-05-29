@@ -474,4 +474,79 @@ class AuthService extends ChangeNotifier {
     await _firebaseAuth.signOut();
     _setLoading(false);
   }
+
+  // Update online status reactively during app lifecycle transitions
+  Future<void> updateOnlineStatus(bool online) async {
+    if (_currentUser == null) return;
+    try {
+      await _firestore.collection('users').doc(_currentUser!.uid).update({
+        'isOnline': online,
+      });
+      _currentUser = _currentUser!.copyWith(isOnline: online);
+      notifyListeners();
+    } catch (e) {
+      print('Firestore updateOnlineStatus error: $e');
+    }
+  }
+
+  // Complete onboarding info setup (flagging setupComplete = true)
+  Future<void> completeSetup({
+    required String name,
+    required String gender,
+    required String dob,
+    required DateTime anniversaryDate,
+  }) async {
+    if (_currentUser == null) return;
+    _setLoading(true);
+    _currentUser = _currentUser!.copyWith(
+      displayName: name,
+      gender: gender,
+      dob: dob,
+      anniversaryDate: anniversaryDate,
+      setupComplete: true,
+    );
+    notifyListeners();
+    try {
+      await _firestore.collection('users').doc(_currentUser!.uid).update({
+        'displayName': name,
+        'gender': gender,
+        'dob': dob,
+        'anniversaryDate': anniversaryDate.toIso8601String(),
+        'setupComplete': true,
+      });
+    } catch (e) {
+      print('Firestore completeSetup error: $e');
+    }
+    _setLoading(false);
+  }
+
+  // Update sticky note text
+  Future<void> updateStickyNote(String note) async {
+    if (_currentUser == null) return;
+    _currentUser = _currentUser!.copyWith(stickyNote: note);
+    notifyListeners();
+    try {
+      await _firestore.collection('users').doc(_currentUser!.uid).update({
+        'stickyNote': note,
+      });
+    } catch (e) {
+      print('Firestore updateStickyNote error: $e');
+    }
+  }
+
+  // Update profile image locally and in Firestore as a Base64 string
+  Future<void> updateProfilePicture(String base64Image) async {
+    if (_currentUser == null) return;
+    _setLoading(true);
+    _currentUser = _currentUser!.copyWith(photoUrl: base64Image);
+    notifyListeners();
+    try {
+      await _firestore.collection('users').doc(_currentUser!.uid).update({
+        'photoUrl': base64Image,
+      });
+    } catch (e) {
+      print('Firestore updateProfilePicture error: $e');
+    }
+    _setLoading(false);
+  }
 }

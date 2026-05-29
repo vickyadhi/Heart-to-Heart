@@ -1,18 +1,26 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:battery_plus/battery_plus.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:googleapis_auth/auth_io.dart' as gauth;
+import 'package:http/http.dart' as http;
 import '../models/love_event.dart';
 import 'auth_service.dart';
 
 class ConnectionService extends ChangeNotifier {
   final AuthService _authService;
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+
+  // FCM token cache — reuse OAuth2 token for 55 min (valid 60 min)
+  String? _cachedAccessToken;
+  DateTime? _tokenExpiry;
+  String? _cachedServiceAccountJson;
 
   List<LoveEvent> _events = [];
   bool _isGeneratingCode = false;
@@ -37,6 +45,13 @@ class ConnectionService extends ChangeNotifier {
   bool _partnerIsOnline = false;
   bool _partnerShowOnline = true;
 
+  StreamSubscription<Position>? _locationSubscription;
+  double? _partnerLatitude;
+  double? _partnerLongitude;
+  DateTime? _partnerLocationUpdatedAt;
+  String? _partnerGender;
+  String? _partnerStickyNote;
+
   StreamSubscription<QuerySnapshot>? _eventsSubscription;
   StreamSubscription<DocumentSnapshot>? _userSubscription;
   StreamSubscription<DocumentSnapshot>? _codeSubscription;
@@ -58,6 +73,11 @@ class ConnectionService extends ChangeNotifier {
   DateTime? get partnerNextMeetingDate => _partnerNextMeetingDate;
   bool get partnerIsOnline => _partnerIsOnline;
   bool get partnerShowOnline => _partnerShowOnline;
+  double? get partnerLatitude => _partnerLatitude;
+  double? get partnerLongitude => _partnerLongitude;
+  DateTime? get partnerLocationUpdatedAt => _partnerLocationUpdatedAt;
+  String? get partnerGender => _partnerGender;
+  String? get partnerStickyNote => _partnerStickyNote;
 
   ConnectionService(this._authService) {
     _authService.addListener(_onAuthChanged);
@@ -71,6 +91,7 @@ class ConnectionService extends ChangeNotifier {
     _userSubscription?.cancel();
     _codeSubscription?.cancel();
     _stopBatteryTracking();
+    stopLocationTracking();
     _partnerSubscription?.cancel();
     super.dispose();
   }
@@ -98,6 +119,7 @@ class ConnectionService extends ChangeNotifier {
       }
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         print('💚 [h2h] Foreground push: ${message.notification?.title}');
+        HapticFeedback.vibrate(); // Vibrate the device immediately on receiving a foreground message
       });
     } catch (e) {
       print('🧡 [h2h] FCM setup error: $e');
@@ -109,11 +131,13 @@ class ConnectionService extends ChangeNotifier {
       _subscribeToUserDoc();
       setupPushNotifications();
       _startBatteryTracking();
+      startLocationTracking();
     } else {
       _eventsSubscription?.cancel();
       _userSubscription?.cancel();
       _codeSubscription?.cancel();
       _stopBatteryTracking();
+      stopLocationTracking();
       _events = [];
       _generatedCode = null;
       _requesterUid = null;
@@ -144,6 +168,82 @@ class ConnectionService extends ChangeNotifier {
     _partnerSubscription?.cancel();
     _partnerBatteryLevel = null;
     _partnerIsCharging = false;
+  }
+
+  void startLocationTracking() async {
+    _locationSubscription?.cancel();
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        print('🧡 [h2h] Geolocation service is disabled.');
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          print('🧡 [h2h] Geolocation permission denied.');
+          return;
+        }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        print('🧡 [h2h] Geolocation permission denied forever.');
+        return;
+      }
+
+      // Get initial position immediately to sync coordinates right away
+      try {
+        Position? initialPos = await Geolocator.getLastKnownPosition();
+        initialPos ??= await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 5),
+        );
+        if (_authService.currentUser != null) {
+          final myUid = _authService.currentUser!.uid;
+          await _firestore.collection('users').doc(myUid).update({
+            'latitude': initialPos.latitude,
+            'longitude': initialPos.longitude,
+            'locationUpdatedAt': DateTime.now().toIso8601String(),
+          });
+          print('💚 [h2h] Synced initial location: ${initialPos.latitude}, ${initialPos.longitude}');
+        }
+      } catch (e) {
+        print('🧡 [h2h] Failed to fetch initial location: $e');
+      }
+
+      // Start listening to coordinate changes
+      _locationSubscription = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 15, // Update only if user moves 15 meters
+        ),
+      ).listen((Position position) async {
+        if (_authService.currentUser != null) {
+          final myUid = _authService.currentUser!.uid;
+          await _firestore.collection('users').doc(myUid).update({
+            'latitude': position.latitude,
+            'longitude': position.longitude,
+            'locationUpdatedAt': DateTime.now().toIso8601String(),
+          });
+        }
+      }, onError: (e) {
+        print('🧡 [h2h] Geolocation stream error: $e');
+      });
+      print('💚 [h2h] Geolocation tracking started.');
+    } catch (e) {
+      print('🧡 [h2h] Location tracking error: $e');
+    }
+  }
+
+  void stopLocationTracking() {
+    _locationSubscription?.cancel();
+    _partnerLatitude = null;
+    _partnerLongitude = null;
+    _partnerLocationUpdatedAt = null;
+    _partnerGender = null;
+    print('💚 [h2h] Geolocation tracking stopped.');
   }
 
   Future<void> _updateMyBatteryStatus() async {
@@ -271,6 +371,13 @@ class ConnectionService extends ChangeNotifier {
         _partnerNextMeetingDate = data['nextMeetingDate'] != null 
             ? DateTime.tryParse(data['nextMeetingDate'] as String) 
             : null;
+        _partnerLatitude = data['latitude'] != null ? (data['latitude'] as num).toDouble() : null;
+        _partnerLongitude = data['longitude'] != null ? (data['longitude'] as num).toDouble() : null;
+        _partnerLocationUpdatedAt = data['locationUpdatedAt'] != null 
+            ? DateTime.tryParse(data['locationUpdatedAt'] as String) 
+            : null;
+        _partnerGender = data['gender'] as String?;
+        _partnerStickyNote = data['stickyNote'] as String?;
         notifyListeners();
       }
     });
@@ -560,13 +667,19 @@ class ConnectionService extends ChangeNotifier {
       if (partnerToken != null && partnerToken.isNotEmpty) {
         print('💚 [h2h] Partner FCM token found.');
         
-        // Zero-config client-side push notification trigger fallback!
+        // FCM V1 API — secure, uses Service Account from Firestore
         try {
-          final fcmConfigDoc = await _firestore.collection('config').doc('fcm').get();
-          final serverKey = fcmConfigDoc.data()?['serverKey'] as String?;
-          if (serverKey != null && serverKey.isNotEmpty) {
-            await _sendDirectPushNotification(
-              serverKey: serverKey,
+          String? serviceAccountJson = _cachedServiceAccountJson;
+          if (serviceAccountJson == null || serviceAccountJson.isEmpty) {
+            print('💚 [h2h] Service account JSON missing in cache. Reading from Firestore...');
+            final fcmConfigDoc = await _firestore.collection('config').doc('fcm').get();
+            serviceAccountJson = fcmConfigDoc.data()?['serviceAccount'] as String?;
+            _cachedServiceAccountJson = serviceAccountJson;
+          }
+
+          if (serviceAccountJson != null && serviceAccountJson.isNotEmpty) {
+            await _sendFcmV1Notification(
+              serviceAccountJson: serviceAccountJson,
               token: partnerToken,
               title: _authService.currentUser!.displayName,
               body: event.message,
@@ -574,10 +687,10 @@ class ConnectionService extends ChangeNotifier {
               senderId: myId,
             );
           } else {
-            print('🧡 [h2h] No FCM serverKey configured in Firestore config/fcm.');
+            print('🧡 [h2h] No serviceAccount configured in Firestore config/fcm.');
           }
         } catch (fcmErr) {
-          print('🧡 [h2h] Direct client-side FCM trigger failed: $fcmErr');
+          print('🧡 [h2h] FCM V1 notification failed: $fcmErr');
         }
       }
     } catch (e) {
@@ -592,6 +705,7 @@ class ConnectionService extends ChangeNotifier {
       case 'sad': return 'is feeling sad';
       case 'excited': return 'is excited!';
       case 'thinking': return 'is thinking of you';
+      case 'love_draw': return 'sent you a drawing! 🎨';
       default: return 'sent you love';
     }
   }
@@ -611,8 +725,10 @@ class ConnectionService extends ChangeNotifier {
     }
   }
 
-  Future<void> _sendDirectPushNotification({
-    required String serverKey,
+  /// FCM V1 API — uses a short-lived OAuth2 access token from the Service Account.
+  /// The serviceAccount JSON is stored securely in Firestore at config/fcm.
+  Future<void> _sendFcmV1Notification({
+    required String serviceAccountJson,
     required String token,
     required String title,
     required String body,
@@ -620,43 +736,116 @@ class ConnectionService extends ChangeNotifier {
     required String senderId,
   }) async {
     try {
-      final client = HttpClient();
-      final request = await client.postUrl(Uri.parse('https://fcm.googleapis.com/fcm/send'));
-      
-      request.headers.set('content-type', 'application/json');
-      request.headers.set('authorization', 'key=$serverKey');
-      
+      final now = DateTime.now().toUtc();
+      String? accessToken = _cachedAccessToken;
+
+      if (accessToken == null || _tokenExpiry == null || now.isAfter(_tokenExpiry!)) {
+        print('💚 [h2h] OAuth2 token expired or missing. Fetching new one...');
+        // 1. Parse the service account JSON
+        final accountCredentials = gauth.ServiceAccountCredentials.fromJson(
+          jsonDecode(serviceAccountJson),
+        );
+
+        // 2. Get a short-lived OAuth2 access token (valid 1 hour)
+        final scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
+        final authClient = await gauth.clientViaServiceAccount(accountCredentials, scopes);
+        accessToken = authClient.credentials.accessToken.data;
+        
+        // Cache it, set expiry slightly earlier (e.g. 5 minutes before actual expiry)
+        _cachedAccessToken = accessToken;
+        _tokenExpiry = authClient.credentials.accessToken.expiry.subtract(const Duration(minutes: 5));
+        authClient.close();
+        print('💚 [h2h] New OAuth2 token fetched. Expiry: $_tokenExpiry');
+      } else {
+        print('💚 [h2h] Using cached OAuth2 token.');
+      }
+
+      // 3. Build emoji for the notification body
       String emojiIcon = '❤️';
       if (type == 'miss_you') emojiIcon = '🥺';
       if (type == 'sad') emojiIcon = '😢';
       if (type == 'excited') emojiIcon = '🤩';
       if (type == 'thinking') emojiIcon = '💭';
+      if (type == 'love_draw') emojiIcon = '🎨';
 
+      // 4. FCM V1 API endpoint
+      const String projectId = 'heart-to-heart-e3cc1';
+      const String endpoint =
+          'https://fcm.googleapis.com/v1/projects/$projectId/messages:send';
+
+      // 5. Build the V1 message payload
       final payload = {
-        'to': token,
-        'notification': {
-          'title': title,
-          'body': '$body $emojiIcon',
-          'sound': 'default',
-          'android_channel_id': 'high_importance_channel',
+        'message': {
+          'token': token,
+          'notification': {
+            'title': title,
+            'body': '$body $emojiIcon',
+          },
+          'android': {
+            'priority': 'high',
+            'notification': {
+              'channel_id': 'high_importance_channel',
+              'sound': 'default',
+              'icon': 'ic_notification',
+            },
+          },
+          'apns': {
+            'payload': {
+              'aps': {'sound': 'default'},
+            },
+          },
+          'data': {
+            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            'senderId': senderId,
+            'type': type,
+          },
         },
-        'data': {
-          'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-          'senderId': senderId,
-          'type': type,
-        },
-        'priority': 'high',
       };
-      
-      request.write(jsonEncode(payload));
-      final response = await request.close();
+
+      // 6. POST the notification
+      final response = await http.post(
+        Uri.parse(endpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+        body: jsonEncode(payload),
+      );
+
       if (response.statusCode == 200) {
-        print('💚 [h2h] Direct client-side FCM notification delivered successfully!');
+        print('💚 [h2h] FCM V1 notification delivered successfully!');
       } else {
-        print('🧡 [h2h] Direct client-side FCM notification failed with status: ${response.statusCode}');
+        print('🧡 [h2h] FCM V1 notification failed: ${response.statusCode} ${response.body}');
+        if (response.statusCode == 401) {
+          // Token might have been revoked/invalid, clear cache
+          _cachedAccessToken = null;
+          _tokenExpiry = null;
+          print('🧡 [h2h] 401 Unauthorized received. Cleared FCM token cache.');
+        }
       }
     } catch (e) {
-      print('🧡 [h2h] Error sending direct FCM notification: $e');
+      print('🧡 [h2h] Error sending FCM V1 notification: $e');
+    }
+  }
+
+  // Refresh partner location on demand (user tapped the GPS refresh button)
+  Future<void> refreshPartnerLocation() async {
+    final partnerId = _authService.currentUser?.partnerUid;
+    if (partnerId == null || partnerId.isEmpty) return;
+    try {
+      final snap = await _firestore.collection('users').doc(partnerId).get();
+      if (snap.exists) {
+        final data = snap.data()!;
+        _partnerLatitude = data['latitude'] != null ? (data['latitude'] as num).toDouble() : null;
+        _partnerLongitude = data['longitude'] != null ? (data['longitude'] as num).toDouble() : null;
+        _partnerLocationUpdatedAt = data['locationUpdatedAt'] != null
+            ? DateTime.tryParse(data['locationUpdatedAt'] as String)
+            : null;
+        notifyListeners();
+        print('💚 [h2h] Partner location refreshed on demand.');
+      }
+    } catch (e) {
+      print('🧡 [h2h] refreshPartnerLocation error: $e');
     }
   }
 }
