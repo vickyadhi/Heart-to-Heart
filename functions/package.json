@@ -1,0 +1,11 @@
+{
+  "name": "functions",
+  "description": "Cloud Functions for h2h",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^11.8.0",
+    "firebase-functions": "^4.3.1"
+  },
+  "private": true
+}

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="@drawable/widget_background"
+    android:padding="16dp"
+    android:gravity="center_vertical">
+
+    <!-- LEFT COLUMN: Partner Connection Details -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1.2"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/widget_main_heart"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="❤️"
+                android:textSize="18sp"
+                android:padding="6dp" />
+
+            <TextView
+                android:id="@+id/widget_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="6dp"
+                android:text="Partner"
+                android:textColor="#2C2525"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+          android:id="@+id/widget_status"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="4dp"
+          android:text="Misses you 🥺"
+          android:textColor="#7A6E70"
+          android:textSize="12sp"
+          android:textStyle="italic" />
+    </LinearLayout>
+
+    <!-- RIGHT SECTION: Emojis Shortcut Indicators -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginLeft="8dp">
+
+        <TextView
+            android:id="@+id/widget_emoji_miss_you"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:text="🥺"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:background="@drawable/widget_emoji_bg"
+            android:layout_margin="3dp"/>
+
+        <TextView
+            android:id="@+id/widget_emoji_sad"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:text="😢"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:background="@drawable/widget_emoji_bg"
+            android:layout_margin="3dp"/>
+
+        <TextView
+            android:id="@+id/widget_emoji_excited"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:text="🤩"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:background="@drawable/widget_emoji_bg"
+            android:layout_margin="3dp"/>
+
+        <TextView
+            android:id="@+id/widget_emoji_thinking"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:text="💭"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:background="@drawable/widget_emoji_bg"
+            android:layout_margin="3dp"/>
+    </LinearLayout>
+</LinearLayout>

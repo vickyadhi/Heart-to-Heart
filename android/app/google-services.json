@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "503771997517",
+    "project_id": "heart-to-heart-e3cc1",
+    "storage_bucket": "heart-to-heart-e3cc1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:503771997517:android:f9730e74be8b7dd4380304",
+        "android_client_info": {
+          "package_name": "com.example.h2h"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "503771997517-gnrluupnqt4bq9c1d30mg04pg6p6gc2o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCy6-xC15fXcwoh74UWB7S5B4ux0ciRq1M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "503771997517-gnrluupnqt4bq9c1d30mg04pg6p6gc2o.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "503771997517-gc28c5qje0cf4cjunkhl8r6n594hjvdk.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.h2h"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
