@@ -104,16 +104,43 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
 
   Widget _buildLogo() {
     return Container(
-      width: 120,
-      height: 120,
+      width: 110,
+      height: 110,
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.18),
-        shape: BoxShape.circle,
+        borderRadius: BorderRadius.circular(26),
       ),
-      padding: const EdgeInsets.all(12),
-      child: Image.asset(
-        'assets/images/hands_heart_3d.png',
-        fit: BoxFit.contain,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Large main white heart
+          Positioned(
+            top: 18,
+            left: 18,
+            child: const Icon(
+              Icons.favorite_rounded,
+              color: Colors.white,
+              size: 64,
+            ),
+          ),
+          // Theme-colored cutout backing ring and small heart
+          Positioned(
+            bottom: 11,
+            right: 11,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF34D5F), // Match splash background color perfectly!
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.favorite_rounded,
+                color: Colors.white,
+                size: 40,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

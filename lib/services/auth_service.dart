@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -230,17 +230,24 @@ class AuthService extends ChangeNotifier {
   Future<bool> loginWithGoogle() async {
     _setLoading(true);
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        _setLoading(false);
-        return false; // User cancelled
+      firebase_auth.UserCredential cred;
+      if (kIsWeb) {
+        final provider = firebase_auth.GoogleAuthProvider();
+        cred = await _firebaseAuth.signInWithPopup(provider);
+      } else {
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+        if (googleUser == null) {
+          _setLoading(false);
+          return false; // User cancelled
+        }
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final firebase_auth.AuthCredential credential = firebase_auth.GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        cred = await _firebaseAuth.signInWithCredential(credential);
       }
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final firebase_auth.AuthCredential credential = firebase_auth.GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-      final cred = await _firebaseAuth.signInWithCredential(credential);
+
       if (cred.user != null) {
         final doc = await _firestore.collection('users').doc(cred.user!.uid).get();
         if (doc.exists) {

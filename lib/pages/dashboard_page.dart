@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../models/love_event.dart';
 import '../services/auth_service.dart';
 import '../services/connection_service.dart';
@@ -417,172 +418,17 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 24),
 
-              // REDESIGNED DYNAMIC COUPLES SPARK CARD (Ultra Premium Adaptive Skeuomorphic UI)
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _currentTipIndex = (_currentTipIndex + 1) % _coupleTips.length;
-                  });
-                  HapticFeedback.selectionClick();
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isSmallScreen ? 14.0 : 20.0, 
-                    vertical: isSmallScreen ? 14.0 : 18.0,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFFFFEAEE), // Soft romantic sunset pink
-                        Color(0xFFFFF5E4), // Gentle gold peach
-                        Color(0xFFF2E7FF), // Soft lavender dream
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(isSmallScreen ? 20 : 28),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.9),
-                      width: isSmallScreen ? 1.8 : 2.5,
-                    ),
-                    boxShadow: [
-                      // Skeuomorphic drop shadow
-                      BoxShadow(
-                        color: AppTheme.primary.withOpacity(0.12),
-                        blurRadius: 20,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 8),
-                      ),
-                      // Inner highlight shadow (white reflection)
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.85),
-                        blurRadius: 8,
-                        offset: const Offset(-2, -2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      // 3D Glowing Bulb Container
-                      Container(
-                        padding: EdgeInsets.all(isSmallScreen ? 8.0 : 12.0),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFFFF9E80), // Vibrant peach-orange
-                              Color(0xFFFF5252), // Glowing coral-red
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFF5252).withValues(alpha: 0.3),
-                              blurRadius: 10,
-                              spreadRadius: 1,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.lightbulb_rounded, // Solid lightbulb for premium feel
-                          color: Colors.white,
-                          size: isSmallScreen ? 18.0 : 22.0,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Header row with premium "NEW" or "SPARK" tag
-                            Wrap(
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 8,
-                              runSpacing: 4,
-                              children: [
-                                Text(
-                                  "Couple's Daily Spark",
-                                  style: TextStyle(
-                                    fontFamily: 'Outfit', 
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: isSmallScreen ? 13.0 : 15.0,
-                                    color: AppTheme.primaryDark,
-                                    letterSpacing: 0.1,
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [AppTheme.primary, AppTheme.accent],
-                                    ),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: const Text(
-                                    "SPARK ✨",
-                                    style: TextStyle(
-                                      fontFamily: 'Outfit',
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              _coupleTips[_currentTipIndex],
-                              style: TextStyle(
-                                fontFamily: 'Inter', 
-                                fontSize: isSmallScreen ? 11.0 : 12.0,
-                                color: AppTheme.textDark,
-                                height: 1.45,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              "Tap to discover new inspiration • Let's talk! 💖",
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: isSmallScreen ? 8.5 : 9.5,
-                                color: AppTheme.textLight.withValues(alpha: 0.7),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.7),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.arrow_forward_ios_rounded, 
-                          color: AppTheme.primary, 
-                          size: isSmallScreen ? 10.0 : 12.0,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
               if (auth.currentUser?.partnerUid != null && auth.currentUser!.partnerUid!.isNotEmpty) ...[
-                const SizedBox(height: 16),
                 _buildPartnerBatteryCard(conn, partnerName),
                 const SizedBox(height: 16),
                 _buildPartnerStatusCard(auth, conn, partnerName),
                 const SizedBox(height: 16),
                 _buildNextMeetingCard(auth, conn),
+                const SizedBox(height: 20),
               ],
+
+              // REDESIGNED DYNAMIC COUPLES SPARK CARD (Ultra Premium Adaptive Skeuomorphic UI, moved below Next Meeting)
+              _buildDailySparkCard(isSmallScreen),
 
               const SizedBox(height: 20),
 
@@ -695,26 +541,23 @@ class _DashboardPageState extends State<DashboardPage> {
     final batteryLevel = conn.partnerBatteryLevel;
     final isCharging = conn.partnerIsCharging;
 
-    IconData batteryIcon;
+    List<List<dynamic>> batteryIcon;
     Color batteryColor;
 
     if (batteryLevel == null) {
-      batteryIcon = Icons.battery_unknown_rounded;
-      batteryColor = AppTheme.textLight.withOpacity(0.6);
+      batteryIcon = HugeIcons.strokeRoundedBatteryCharging01;
+      batteryColor = AppTheme.textLight.withValues(alpha: 0.6);
     } else if (isCharging) {
-      batteryIcon = Icons.battery_charging_full_rounded;
+      batteryIcon = HugeIcons.strokeRoundedBatteryCharging02;
       batteryColor = Colors.green;
     } else if (batteryLevel > 80) {
-      batteryIcon = Icons.battery_full_rounded;
+      batteryIcon = HugeIcons.strokeRoundedBatteryFull;
       batteryColor = Colors.green;
-    } else if (batteryLevel > 50) {
-      batteryIcon = Icons.battery_5_bar_rounded;
-      batteryColor = Colors.green[600]!;
     } else if (batteryLevel > 20) {
-      batteryIcon = Icons.battery_3_bar_rounded;
+      batteryIcon = HugeIcons.strokeRoundedBatteryMedium01;
       batteryColor = Colors.orange;
     } else {
-      batteryIcon = Icons.battery_alert_rounded;
+      batteryIcon = HugeIcons.strokeRoundedBatteryLow;
       batteryColor = Colors.redAccent;
     }
 
@@ -723,23 +566,23 @@ class _DashboardPageState extends State<DashboardPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.85),
+        color: Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(24),
         boxShadow: AppTheme.premiumShadow,
-        border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: batteryColor.withOpacity(0.08),
+              color: batteryColor.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              batteryIcon,
+            child: HugeIcon(
+              icon: batteryIcon,
               color: batteryColor,
-              size: 24,
+              size: 22,
             ),
           ),
           const SizedBox(width: 16),
@@ -763,14 +606,14 @@ class _DashboardPageState extends State<DashboardPage> {
                       : isCharging
                           ? 'Charging now'
                           : isLowBattery
-                              ? 'Low battery! ⚠️'
+                              ? 'Low battery alert'
                               : 'Unplugged',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 11,
                     color: isLowBattery 
                         ? Colors.redAccent 
-                        : AppTheme.textLight.withOpacity(0.8),
+                        : AppTheme.textLight.withValues(alpha: 0.8),
                     fontWeight: isLowBattery ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
@@ -791,18 +634,39 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  String _getStatusFallbackEmoji(String status) {
+    switch (status) {
+      case 'Active': return '😊';
+      case 'Busy': return '💻';
+      case 'Sleeping': return '😴';
+      case 'Driving': return '🚗';
+      case 'Movie': return '🍿';
+      default: return '😊';
+    }
+  }
+
+  List<List<dynamic>> _getStatusIcon(String status) {
+    switch (status) {
+      case 'Active': return HugeIcons.strokeRoundedSmile;
+      case 'Busy': return HugeIcons.strokeRoundedBriefcase01;
+      case 'Sleeping': return HugeIcons.strokeRoundedMoon02;
+      case 'Driving': return HugeIcons.strokeRoundedCar02;
+      case 'Movie': return HugeIcons.strokeRoundedTicket01;
+      default: return HugeIcons.strokeRoundedSmile;
+    }
+  }
+
   Widget _buildPartnerStatusCard(AuthService auth, ConnectionService conn, String partnerName) {
     final status = conn.partnerCustomStatus ?? 'Active';
-    final emoji = conn.partnerCustomStatusEmoji ?? '😊';
     final partnerOnline = conn.partnerShowOnline && conn.partnerIsOnline;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.85),
+        color: Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(24),
         boxShadow: AppTheme.premiumShadow,
-        border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -812,12 +676,13 @@ class _DashboardPageState extends State<DashboardPage> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.08),
+                  color: AppTheme.primary.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
-                child: Text(
-                  emoji,
-                  style: const TextStyle(fontSize: 20),
+                child: HugeIcon(
+                  icon: _getStatusIcon(status),
+                  color: AppTheme.primary,
+                  size: 22,
                 ),
               ),
               const SizedBox(width: 16),
@@ -835,13 +700,26 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      partnerOnline ? 'Active on app now ⚡' : 'Offline right now',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 11,
-                        color: partnerOnline ? AppTheme.success : AppTheme.textLight.withOpacity(0.8),
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: partnerOnline ? AppTheme.success : AppTheme.textLight.withValues(alpha: 0.4),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          partnerOnline ? 'Active on app now' : 'Offline right now',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 11,
+                            color: partnerOnline ? AppTheme.success : AppTheme.textLight.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -865,11 +743,11 @@ class _DashboardPageState extends State<DashboardPage> {
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildStatusChip(auth, 'Active', '😊'),
-                _buildStatusChip(auth, 'Busy', '💻'),
-                _buildStatusChip(auth, 'Sleeping', '😴'),
-                _buildStatusChip(auth, 'Driving', '🚗'),
-                _buildStatusChip(auth, 'Movie', '🍿'),
+                _buildStatusChip(auth, 'Active', HugeIcons.strokeRoundedSmile),
+                _buildStatusChip(auth, 'Busy', HugeIcons.strokeRoundedBriefcase01),
+                _buildStatusChip(auth, 'Sleeping', HugeIcons.strokeRoundedMoon02),
+                _buildStatusChip(auth, 'Driving', HugeIcons.strokeRoundedCar02),
+                _buildStatusChip(auth, 'Movie', HugeIcons.strokeRoundedTicket01),
               ],
             ),
           ),
@@ -878,11 +756,11 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildStatusChip(AuthService auth, String status, String emoji) {
+  Widget _buildStatusChip(AuthService auth, String status, List<List<dynamic>> icon) {
     final isSelected = auth.currentUser?.customStatus == status;
     return GestureDetector(
       onTap: () {
-        auth.updateCustomStatus(status, emoji);
+        auth.updateCustomStatus(status, _getStatusFallbackEmoji(status));
         HapticFeedback.selectionClick();
       },
       child: AnimatedContainer(
@@ -893,14 +771,18 @@ class _DashboardPageState extends State<DashboardPage> {
           color: isSelected ? AppTheme.primary : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppTheme.primary : Colors.grey.withOpacity(0.2),
+            color: isSelected ? AppTheme.primary : Colors.grey.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
         child: Row(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 14)),
-            const SizedBox(width: 4),
+            HugeIcon(
+              icon: icon,
+              color: isSelected ? Colors.white : AppTheme.primary,
+              size: 16,
+            ),
+            const SizedBox(width: 6),
             Text(
               status,
               style: TextStyle(
@@ -940,10 +822,10 @@ class _DashboardPageState extends State<DashboardPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.85),
+        color: Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(24),
         boxShadow: AppTheme.premiumShadow,
-        border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -951,12 +833,12 @@ class _DashboardPageState extends State<DashboardPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(Icons.flight_takeoff_rounded, color: AppTheme.primary, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    "Next Meeting ✈️",
+                  HugeIcon(icon: HugeIcons.strokeRoundedAirplane01, color: AppTheme.primary, size: 20),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Next Meeting",
                     style: TextStyle(
                       fontFamily: 'Outfit',
                       fontSize: 14,
@@ -990,7 +872,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     await auth.updateNextMeetingDate(picked);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: const Text('Next meeting date updated! 🗺️✈️', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.w600)),
+                        content: const Text('Next meeting date updated!', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.w600)),
                         backgroundColor: AppTheme.primary,
                         behavior: SnackBarBehavior.floating,
                       ),
@@ -1024,11 +906,11 @@ class _DashboardPageState extends State<DashboardPage> {
             const SizedBox(height: 12),
             Center(
               child: Text(
-                "until we see each other again! ❤️",
+                "until we see each other again!",
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 11,
-                  color: AppTheme.textLight.withOpacity(0.8),
+                  color: AppTheme.textLight.withValues(alpha: 0.8),
                 ),
               ),
             ),
@@ -1048,22 +930,22 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.04),
+                  color: AppTheme.primary.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.primary.withOpacity(0.12), style: BorderStyle.values[1]),
+                  border: Border.all(color: AppTheme.primary.withValues(alpha: 0.12), style: BorderStyle.solid),
                 ),
-                child: const Column(
+                child: Column(
                   children: [
-                    Icon(Icons.calendar_month_rounded, color: AppTheme.primary, size: 28),
-                    SizedBox(height: 8),
-                    Text(
+                    HugeIcon(icon: HugeIcons.strokeRoundedCalendar03, color: AppTheme.primary, size: 28),
+                    const SizedBox(height: 8),
+                    const Text(
                       "No meeting scheduled yet.",
                       style: TextStyle(fontFamily: 'Outfit', fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textDark),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
-                      "Tap here to countdown to your next flight! ✈️",
-                      style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppTheme.textLight),
+                      "Tap here to countdown to your next flight!",
+                      style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppTheme.textLight.withValues(alpha: 0.8)),
                     ),
                   ],
                 ),
@@ -1157,6 +1039,165 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDailySparkCard(bool isSmallScreen) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentTipIndex = (_currentTipIndex + 1) % _coupleTips.length;
+        });
+        HapticFeedback.selectionClick();
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: isSmallScreen ? 14.0 : 20.0, 
+          vertical: isSmallScreen ? 14.0 : 18.0,
+        ),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFFFFEAEE), // Soft romantic sunset pink
+              Color(0xFFFFF5E4), // Gentle gold peach
+              Color(0xFFF2E7FF), // Soft lavender dream
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(isSmallScreen ? 20 : 28),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.9),
+            width: isSmallScreen ? 1.8 : 2.5,
+          ),
+          boxShadow: [
+            // Skeuomorphic drop shadow
+            BoxShadow(
+              color: AppTheme.primary.withOpacity(0.12),
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 8),
+            ),
+            // Inner highlight shadow (white reflection)
+            BoxShadow(
+              color: Colors.white.withOpacity(0.85),
+              blurRadius: 8,
+              offset: const Offset(-2, -2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // 3D Glowing Bulb Container
+            Container(
+              padding: EdgeInsets.all(isSmallScreen ? 8.0 : 12.0),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFFFF9E80), // Vibrant peach-orange
+                    Color(0xFFFF5252), // Glowing coral-red
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF5252).withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.lightbulb_rounded, // Solid lightbulb for premium feel
+                color: Colors.white,
+                size: isSmallScreen ? 18.0 : 22.0,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header row with premium "NEW" or "SPARK" tag
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      Text(
+                        "Couple's Daily Spark",
+                        style: TextStyle(
+                          fontFamily: 'Outfit', 
+                          fontWeight: FontWeight.w900,
+                          fontSize: isSmallScreen ? 13.0 : 15.0,
+                          color: AppTheme.primaryDark,
+                          letterSpacing: 0.1,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppTheme.primary, AppTheme.accent],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          "SPARK ✨",
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _coupleTips[_currentTipIndex],
+                    style: TextStyle(
+                      fontFamily: 'Inter', 
+                      fontSize: isSmallScreen ? 11.0 : 12.0,
+                      color: AppTheme.textDark,
+                      height: 1.45,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "Tap to discover new inspiration • Let's talk! 💖",
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: isSmallScreen ? 8.5 : 9.5,
+                      color: AppTheme.textLight.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.7),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.arrow_forward_ios_rounded, 
+                color: AppTheme.primary, 
+                size: isSmallScreen ? 10.0 : 12.0,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

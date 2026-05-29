@@ -1,9 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:uuid/uuid.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:battery_plus/battery_plus.dart';
 import '../models/love_event.dart';
@@ -12,7 +13,6 @@ import 'auth_service.dart';
 class ConnectionService extends ChangeNotifier {
   final AuthService _authService;
   FirebaseFirestore get _firestore => FirebaseFirestore.instance;
-  final _uuid = const Uuid();
 
   List<LoveEvent> _events = [];
   bool _isGeneratingCode = false;
@@ -558,7 +558,27 @@ class ConnectionService extends ChangeNotifier {
       final partnerDoc = await _firestore.collection('users').doc(partnerId).get();
       final partnerToken = partnerDoc.data()?['fcmToken'] as String?;
       if (partnerToken != null && partnerToken.isNotEmpty) {
-        print('💚 [h2h] Partner FCM token found — background notification will be sent via Cloud Function.');
+        print('💚 [h2h] Partner FCM token found.');
+        
+        // Zero-config client-side push notification trigger fallback!
+        try {
+          final fcmConfigDoc = await _firestore.collection('config').doc('fcm').get();
+          final serverKey = fcmConfigDoc.data()?['serverKey'] as String?;
+          if (serverKey != null && serverKey.isNotEmpty) {
+            await _sendDirectPushNotification(
+              serverKey: serverKey,
+              token: partnerToken,
+              title: _authService.currentUser!.displayName,
+              body: event.message,
+              type: type,
+              senderId: myId,
+            );
+          } else {
+            print('🧡 [h2h] No FCM serverKey configured in Firestore config/fcm.');
+          }
+        } catch (fcmErr) {
+          print('🧡 [h2h] Direct client-side FCM trigger failed: $fcmErr');
+        }
       }
     } catch (e) {
       print('🧡 [h2h] Send event error: $e');
@@ -588,6 +608,55 @@ class ConnectionService extends ChangeNotifier {
       print('💚 [h2h] Home Screen Widget updated successfully!');
     } catch (e) {
       print('🧡 [h2h] Error updating home screen widget: $e');
+    }
+  }
+
+  Future<void> _sendDirectPushNotification({
+    required String serverKey,
+    required String token,
+    required String title,
+    required String body,
+    required String type,
+    required String senderId,
+  }) async {
+    try {
+      final client = HttpClient();
+      final request = await client.postUrl(Uri.parse('https://fcm.googleapis.com/fcm/send'));
+      
+      request.headers.set('content-type', 'application/json');
+      request.headers.set('authorization', 'key=$serverKey');
+      
+      String emojiIcon = '❤️';
+      if (type == 'miss_you') emojiIcon = '🥺';
+      if (type == 'sad') emojiIcon = '😢';
+      if (type == 'excited') emojiIcon = '🤩';
+      if (type == 'thinking') emojiIcon = '💭';
+
+      final payload = {
+        'to': token,
+        'notification': {
+          'title': title,
+          'body': '$body $emojiIcon',
+          'sound': 'default',
+          'android_channel_id': 'high_importance_channel',
+        },
+        'data': {
+          'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+          'senderId': senderId,
+          'type': type,
+        },
+        'priority': 'high',
+      };
+      
+      request.write(jsonEncode(payload));
+      final response = await request.close();
+      if (response.statusCode == 200) {
+        print('💚 [h2h] Direct client-side FCM notification delivered successfully!');
+      } else {
+        print('🧡 [h2h] Direct client-side FCM notification failed with status: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('🧡 [h2h] Error sending direct FCM notification: $e');
     }
   }
 }
