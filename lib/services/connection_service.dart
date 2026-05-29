@@ -848,4 +848,21 @@ class ConnectionService extends ChangeNotifier {
       print('🧡 [h2h] refreshPartnerLocation error: $e');
     }
   }
+
+  // Update partner's sticky note text
+  Future<void> updatePartnerStickyNote(String note) async {
+    final partnerId = _authService.currentUser?.partnerUid;
+    if (partnerId == null || partnerId.isEmpty) return;
+    try {
+      await _firestore.collection('users').doc(partnerId).update({
+        'stickyNote': note,
+      });
+      _partnerStickyNote = note;
+      notifyListeners();
+      print('💚 [h2h] Partner sticky note updated.');
+    } catch (e) {
+      print('🧡 [h2h] updatePartnerStickyNote error: $e');
+    }
+  }
 }
+

@@ -349,16 +349,16 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.local_fire_department_rounded, color: Colors.orange, size: 16),
-                        const SizedBox(width: 6),
                         Text(
-                          '$streak 🔥',
+                          '$streak',
                           style: TextStyle(fontFamily: 'Outfit', 
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: Colors.orange[700],
                           ),
                         ),
+                        const SizedBox(width: 5),
+                        const Icon(Icons.local_fire_department_rounded, color: Colors.orange, size: 16),
                       ],
                     ),
                   ),
@@ -1183,15 +1183,17 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                "Partner's Location 📍",
-                style: GoogleFonts.fredoka(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
+              Expanded(
+                child: Text(
+                  "Partner's Location",
+                  style: GoogleFonts.fredoka(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textDark,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Spacer(),
               // Refresh button
               GestureDetector(
                 onTap: () {
@@ -1207,16 +1209,6 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: const Icon(Icons.refresh_rounded, color: Colors.blue, size: 18),
                 ),
               ),
-              if (hasLocation && conn.partnerLocationUpdatedAt != null) ...[
-                const SizedBox(width: 8),
-                Text(
-                  'Updated ${_formatLocationTime(conn.partnerLocationUpdatedAt!)}',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: AppTheme.textLight,
-                  ),
-                ),
-              ],
             ],
           ),
           const SizedBox(height: 16),
@@ -1349,47 +1341,128 @@ class _DashboardPageState extends State<DashboardPage> {
     final myNote = auth.currentUser?.stickyNote ?? '';
     final partnerNote = conn.partnerStickyNote ?? '';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: Text(
-            'Sticky Notes 📝',
-            style: GoogleFonts.fredoka(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textDark,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppTheme.premiumShadow,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header row with round background icon & Title & Erase button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.note_alt_rounded,
+                      color: AppTheme.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    "Sticky Notes",
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textDark,
+                    ),
+                  ),
+                ],
+              ),
+              // Clear Note button (clears the note I write, i.e., partner's note on the right)
+              GestureDetector(
+                onTap: () => _confirmClearNote(context, conn, partnerName),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: AppTheme.textLight,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _buildStickyNote(
+                    name: myName,
+                    content: myNote,
+                    color: const Color(0xFFFEF7CD), // warm yellow paper
+                    lineColor: const Color(0xFFE8D87A),
+                    nameColor: const Color(0xFFA07800),
+                    isEditable: false, // I cannot edit my own note (my partner edits it)
+                    onSave: null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStickyNote(
+                    name: partnerName,
+                    content: partnerNote,
+                    color: const Color(0xFFDDF1FF), // soft sky blue paper
+                    lineColor: const Color(0xFF9DD4F0),
+                    nameColor: const Color(0xFF0070A8),
+                    isEditable: true, // I can edit my partner's note
+                    onSave: (text) => conn.updatePartnerStickyNote(text),
+                  ),
+                ),
+              ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmClearNote(BuildContext context, ConnectionService conn, String partnerName) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Clear Note?',
+          style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold),
         ),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: _buildStickyNote(
-                name: myName,
-                content: myNote,
-                color: const Color(0xFFFFF3C2), // warm yellow
-                nameColor: const Color(0xFFB87A00),
-                isEditable: true,
-                onSave: (text) => auth.updateStickyNote(text),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStickyNote(
-                name: partnerName,
-                content: partnerNote,
-                color: const Color(0xFFD4F0FF), // soft blue
-                nameColor: const Color(0xFF0077AA),
-                isEditable: false,
-                onSave: null,
-              ),
-            ),
-          ],
+        content: Text(
+          'Are you sure you want to clear your note for $partnerName?',
+          style: const TextStyle(fontFamily: 'Inter'),
         ),
-      ],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () {
+              conn.updatePartnerStickyNote('');
+              Navigator.pop(ctx);
+            },
+            child: const Text('Clear', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1397,80 +1470,134 @@ class _DashboardPageState extends State<DashboardPage> {
     required String name,
     required String content,
     required Color color,
+    required Color lineColor,
     required Color nameColor,
     required bool isEditable,
     required Function(String)? onSave,
   }) {
     final controller = TextEditingController(text: content);
+    // Move cursor to end of text
+    controller.selection = TextSelection.fromPosition(TextPosition(offset: controller.text.length));
+
+    // 5 ruled lines at fixed spacing
+    const double lineSpacing = 22.0;
+    const int lineCount = 5;
+    const double topPad = 14.0;
+    const double headerH = 26.0; // pin + name row height
+
     return Container(
-      padding: const EdgeInsets.all(14),
+      constraints: const BoxConstraints(minHeight: 160),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.7),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.push_pin_rounded, size: 14, color: Colors.grey),
-              const SizedBox(width: 4),
-              Text(
-                name,
-                style: TextStyle(
-                  fontFamily: 'Outfit',
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: nameColor,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          children: [
+            // ── Ruled lines (drawn behind everything) ──
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _RuledLinePainter(
+                  lineColor: lineColor,
+                  lineSpacing: lineSpacing,
+                  topOffset: topPad + headerH + 6,
+                  lineCount: lineCount,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          if (isEditable)
-            TextField(
-              controller: controller,
-              maxLines: 4,
-              minLines: 3,
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13,
-                color: Color(0xFF333333),
-                height: 1.5,
-              ),
-              decoration: const InputDecoration(
-                hintText: 'Write a note...',
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-                fillColor: Colors.transparent,
-                filled: true,
-              ),
-              onEditingComplete: () => onSave?.call(controller.text),
-              onTapOutside: (_) {
-                FocusScope.of(context).unfocus();
-                onSave?.call(controller.text);
-              },
-            )
-          else
-            Text(
-              content.isEmpty ? '(no note yet)' : content,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13,
-                color: content.isEmpty ? Colors.grey : const Color(0xFF333333),
-                height: 1.5,
-                fontStyle: content.isEmpty ? FontStyle.italic : FontStyle.normal,
+            ),
+
+            // ── Content ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Pin + Name header
+                  Row(
+                    children: [
+                      Icon(Icons.push_pin_rounded, size: 13, color: nameColor.withOpacity(0.7)),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          name,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Outfit',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                            color: nameColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+
+                  // Note body — editable or read-only
+                  SizedBox(
+                    height: lineSpacing * lineCount,
+                    child: isEditable
+                        ? TextField(
+                            controller: controller,
+                            maxLines: null,
+                            expands: true,
+                            textAlignVertical: TextAlignVertical.top,
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 13,
+                              color: Color(0xFF333333),
+                              height: 1.69, // matches lineSpacing / fontSize
+                              leadingDistribution: TextLeadingDistribution.even,
+                            ),
+                            decoration: const InputDecoration(
+                              hintText: 'Write a note...',
+                              hintStyle: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 13,
+                                color: Color(0xFFBBAA66),
+                                height: 1.69,
+                              ),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
+                              fillColor: Colors.transparent,
+                              filled: true,
+                            ),
+                            onTapOutside: (_) {
+                              FocusScope.of(context).unfocus();
+                              onSave?.call(controller.text);
+                            },
+                          )
+                        : SizedBox(
+                            width: double.infinity,
+                            child: content.isEmpty
+                                ? const SizedBox.shrink()
+                                : SingleChildScrollView(
+                                    child: Text(
+                                      content,
+                                      style: const TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 13,
+                                        color: Color(0xFF333333),
+                                        height: 1.69,
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                  ),
+                ],
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1484,7 +1611,45 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
+// ── Ruled notebook line painter for sticky notes ──────────────────────────
+class _RuledLinePainter extends CustomPainter {
+  final Color lineColor;
+  final double lineSpacing;
+  final double topOffset;
+  final int lineCount;
+
+  const _RuledLinePainter({
+    required this.lineColor,
+    required this.lineSpacing,
+    required this.topOffset,
+    required this.lineCount,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = lineColor.withOpacity(0.55)
+      ..strokeWidth = 0.8
+      ..style = PaintingStyle.stroke;
+
+    for (int i = 0; i < lineCount; i++) {
+      final y = topOffset + i * lineSpacing;
+      if (y < size.height - 6) {
+        canvas.drawLine(
+          Offset(12, y),
+          Offset(size.width - 12, y),
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RuledLinePainter oldDelegate) => false;
+}
+
 class ThreeDEmojiButton extends StatefulWidget {
+
   final VoidCallback onTap;
   final String emoji;
 
