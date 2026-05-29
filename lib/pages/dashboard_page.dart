@@ -305,7 +305,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               ),
                             ],
                           ),
-                          Row(
+                           Row(
                             children: [
                               Text(
                                 partnerName,
@@ -321,8 +321,10 @@ class _DashboardPageState extends State<DashboardPage> {
                               Container(
                                 width: 8,
                                 height: 8,
-                                decoration: const BoxDecoration(
-                                  color: AppTheme.success,
+                                decoration: BoxDecoration(
+                                  color: (conn.partnerShowOnline && conn.partnerIsOnline)
+                                      ? AppTheme.success
+                                      : Colors.grey.withOpacity(0.6),
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -476,6 +478,10 @@ class _DashboardPageState extends State<DashboardPage> {
               if (auth.currentUser?.partnerUid != null && auth.currentUser!.partnerUid!.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 _buildPartnerBatteryCard(conn, partnerName),
+                const SizedBox(height: 16),
+                _buildPartnerStatusCard(auth, conn, partnerName),
+                const SizedBox(height: 16),
+                _buildNextMeetingCard(auth, conn),
               ],
 
               const SizedBox(height: 20),
@@ -507,6 +513,71 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
                 ],
+              ),
+
+              const SizedBox(height: 36),
+
+              // BRANDING FOOTER (Instamart style)
+              Center(
+                child: Column(
+                  children: [
+                    ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [AppTheme.primary, AppTheme.accent],
+                      ).createShader(bounds),
+                      child: const Text(
+                        'heart to heart',
+                        style: TextStyle(
+                          fontFamily: 'Outfit',
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Connected • Closer • Forever',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11,
+                        color: AppTheme.textLight.withOpacity(0.6),
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 40,
+                      height: 1.5,
+                      color: AppTheme.primary.withOpacity(0.08),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Crafted with ',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 10,
+                            color: AppTheme.textLight.withOpacity(0.5),
+                          ),
+                        ),
+                        const Icon(Icons.favorite_rounded, color: AppTheme.primary, size: 10),
+                        Text(
+                          ' in India',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 10,
+                            color: AppTheme.textLight.withOpacity(0.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 98), // optimized capsule bottom bar clearancece for bottom floating navigation bar
@@ -614,6 +685,323 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPartnerStatusCard(AuthService auth, ConnectionService conn, String partnerName) {
+    final status = conn.partnerCustomStatus ?? 'Active';
+    final emoji = conn.partnerCustomStatusEmoji ?? '😊';
+    final partnerOnline = conn.partnerShowOnline && conn.partnerIsOnline;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.85),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppTheme.premiumShadow,
+        border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withOpacity(0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  emoji,
+                  style: const TextStyle(fontSize: 20),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "$partnerName is $status",
+                      style: const TextStyle(
+                        fontFamily: 'Outfit',
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      partnerOnline ? 'Active on app now ⚡' : 'Offline right now',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11,
+                        color: partnerOnline ? AppTheme.success : AppTheme.textLight.withOpacity(0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Divider(height: 1, color: Colors.black12),
+          const SizedBox(height: 12),
+          const Text(
+            "Update your status:",
+            style: TextStyle(
+              fontFamily: 'Outfit',
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textDark,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildStatusChip(auth, 'Active', '😊'),
+                _buildStatusChip(auth, 'Busy', '💻'),
+                _buildStatusChip(auth, 'Sleeping', '😴'),
+                _buildStatusChip(auth, 'Driving', '🚗'),
+                _buildStatusChip(auth, 'Movie', '🍿'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(AuthService auth, String status, String emoji) {
+    final isSelected = auth.currentUser?.customStatus == status;
+    return GestureDetector(
+      onTap: () {
+        auth.updateCustomStatus(status, emoji);
+        HapticFeedback.selectionClick();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primary : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppTheme.primary : Colors.grey.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: 4),
+            Text(
+              status,
+              style: TextStyle(
+                fontFamily: 'Outfit',
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? Colors.white : AppTheme.textDark,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNextMeetingCard(AuthService auth, ConnectionService conn) {
+    final date = conn.partnerNextMeetingDate ?? auth.currentUser?.nextMeetingDate;
+    final hasDate = date != null;
+
+    int days = 0;
+    int hours = 0;
+    int minutes = 0;
+
+    if (hasDate) {
+      final diff = date.difference(DateTime.now());
+      if (diff.isNegative) {
+        days = 0;
+        hours = 0;
+        minutes = 0;
+      } else {
+        days = diff.inDays;
+        hours = diff.inHours % 24;
+        minutes = diff.inMinutes % 60;
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.85),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppTheme.premiumShadow,
+        border: Border.all(color: Colors.white.withOpacity(0.5), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.flight_takeoff_rounded, color: AppTheme.primary, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    "Next Meeting ✈️",
+                    style: TextStyle(
+                      fontFamily: 'Outfit',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textDark,
+                    ),
+                  ),
+                ],
+              ),
+              GestureDetector(
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: date ?? DateTime.now().add(const Duration(days: 7)),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: const ColorScheme.light(
+                            primary: AppTheme.primary,
+                            onPrimary: Colors.white,
+                            onSurface: AppTheme.textDark,
+                          ),
+                        ),
+                        child: child!,
+                      );
+                    },
+                  );
+                  if (picked != null) {
+                    await auth.updateNextMeetingDate(picked);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Next meeting date updated! 🗺️✈️', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.w600)),
+                        backgroundColor: AppTheme.primary,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+                child: Text(
+                  hasDate ? "Change Date" : "Schedule",
+                  style: const TextStyle(
+                    fontFamily: 'Outfit',
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (hasDate) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildTimeUnit(days.toString().padLeft(2, '0'), 'DAYS'),
+                const Text(':', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey)),
+                _buildTimeUnit(hours.toString().padLeft(2, '0'), 'HOURS'),
+                const Text(':', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey)),
+                _buildTimeUnit(minutes.toString().padLeft(2, '0'), 'MINS'),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Center(
+              child: Text(
+                "until we see each other again! ❤️",
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 11,
+                  color: AppTheme.textLight.withOpacity(0.8),
+                ),
+              ),
+            ),
+          ] else ...[
+            GestureDetector(
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now().add(const Duration(days: 7)),
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                );
+                if (picked != null) {
+                  await auth.updateNextMeetingDate(picked);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withOpacity(0.04),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.primary.withOpacity(0.12), style: BorderStyle.values[1]),
+                ),
+                child: const Column(
+                  children: [
+                    Icon(Icons.calendar_month_rounded, color: AppTheme.primary, size: 28),
+                    SizedBox(height: 8),
+                    Text(
+                      "No meeting scheduled yet.",
+                      style: TextStyle(fontFamily: 'Outfit', fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      "Tap here to countdown to your next flight! ✈️",
+                      style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppTheme.textLight),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimeUnit(String value, String label) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF0F2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontFamily: 'Outfit',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.primary,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 9,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
+      ],
     );
   }
 
