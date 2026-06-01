@@ -78,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
                   Expanded(
                     child: Text(
                       'Seamlessly signing in with Demo Account... ✨',
-                      style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 13),
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     ),
                   ),
                 ],
@@ -178,7 +178,6 @@ class _LoginPageState extends State<LoginPage> {
                           const Text(
                             'h2h',
                             style: TextStyle(
-                              fontFamily: 'Outfit',
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.primary,
@@ -279,7 +278,6 @@ class _LoginPageState extends State<LoginPage> {
                                 child: Text(
                                   'Forgot password?',
                                   style: TextStyle(
-                                    fontFamily: 'Inter',
                                     color: AppTheme.textLight.withOpacity(0.8),
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -320,12 +318,11 @@ class _LoginPageState extends State<LoginPage> {
                             child: RichText(
                               text: TextSpan(
                                 text: _isSignUp ? 'Already have an account? ' : "Don't have an account? ",
-                                style: TextStyle(fontFamily: 'Inter', color: AppTheme.textLight, fontSize: 13),
+                                style: TextStyle(color: AppTheme.textLight, fontSize: 13),
                                 children: [
                                   TextSpan(
                                     text: _isSignUp ? 'Sign In' : 'Sign Up',
-                                    style: TextStyle(fontFamily: 'Outfit', 
-                                      color: AppTheme.primary,
+                                    style: TextStyle(color: AppTheme.primary,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -360,7 +357,7 @@ class _LoginPageState extends State<LoginPage> {
                                 foregroundColor: AppTheme.textDark,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                               ),
-                              child: const Text('Continue with Google', style: TextStyle(fontFamily: 'Outfit', fontSize: 14, fontWeight: FontWeight.bold)),
+                              child: const Text('Continue with Google', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                             ),
                           ),
                         ],

@@ -144,12 +144,26 @@ Future<void> backgroundCallback(Uri? uri) async {
               'timestamp': FieldValue.serverTimestamp(),
             };
 
-            await FirebaseFirestore.instance
-                .collection('conversations')
-                .doc(convoId)
-                .collection('events')
-                .doc(eventId)
-                .set(event);
+            final updates = <String, dynamic>{
+              'loveSentCount': FieldValue.increment(1),
+            };
+            if (type == 'miss_you' || type == 'sad' || type == 'excited' || type == 'thinking') {
+              updates['emojisSentCount'] = FieldValue.increment(1);
+            } else {
+              updates['heartsCount'] = FieldValue.increment(1);
+            }
+
+            final batch = FirebaseFirestore.instance.batch();
+            batch.set(
+              FirebaseFirestore.instance
+                  .collection('conversations')
+                  .doc(convoId)
+                  .collection('events')
+                  .doc(eventId),
+              event,
+            );
+            batch.update(FirebaseFirestore.instance.collection('users').doc(myUid), updates);
+            await batch.commit();
 
             print('💚 [h2h] Background widget tap event sent successfully to Firestore!');
 

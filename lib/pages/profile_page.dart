@@ -62,7 +62,7 @@ class _ProfilePageState extends State<ProfilePage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Profile picture updated! 💖', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
+              content: Text('Profile picture updated!', style: TextStyle(fontWeight: FontWeight.bold)),
               backgroundColor: Colors.green,
               behavior: SnackBarBehavior.floating,
             ),
@@ -73,7 +73,7 @@ class _ProfilePageState extends State<ProfilePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error updating profile picture: $e', style: const TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
+            content: Text('Error updating profile picture: $e', style: const TextStyle(fontWeight: FontWeight.bold)),
             backgroundColor: AppTheme.primary,
             behavior: SnackBarBehavior.floating,
           ),
@@ -106,7 +106,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     'Unpair Your Partner?',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontFamily: 'Outfit',
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textDark,
@@ -124,7 +123,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     "If you unpair now, your connection will be paused. You can always pair again whenever you're both ready.",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontFamily: 'Outfit',
                       fontSize: 13,
                       color: AppTheme.textLight,
                       height: 1.5,
@@ -137,12 +135,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       onPressed: () async {
                         Navigator.pop(ctx);
                         await auth.unpairPartner();
-                        if (context.mounted) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (_) => const PairingPage()),
-                          );
-                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primary,
@@ -151,7 +143,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                         elevation: 0,
                       ),
-                      child: const Text('Unpair', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 16)),
+                      child: const Text('Unpair', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -165,7 +157,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       ),
-                      child: const Text('Cancel', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 16)),
+                      child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     ),
                   ),
                 ],
@@ -196,7 +188,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     'See You Soon!',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontFamily: 'Outfit',
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textDark,
@@ -214,7 +205,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     "Taking a little break? You'll be logged out for now, but we'll be right here whenever you're ready to come back.",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontFamily: 'Outfit',
                       fontSize: 13,
                       color: AppTheme.textLight,
                       height: 1.5,
@@ -241,7 +231,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                         elevation: 0,
                       ),
-                      child: const Text('Logout', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 16)),
+                      child: const Text('Logout', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -255,7 +245,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       ),
-                      child: const Text('Cancel', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 16)),
+                      child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     ),
                   ),
                 ],
@@ -296,7 +286,6 @@ class _ProfilePageState extends State<ProfilePage> {
           const Text(
             'Settings',
             style: TextStyle(
-              fontFamily: 'Outfit',
               fontSize: 32,
               fontWeight: FontWeight.bold,
               color: AppTheme.textDark,
@@ -352,7 +341,6 @@ class _ProfilePageState extends State<ProfilePage> {
                                       ? Text(
                                           myName.isNotEmpty ? myName[0].toUpperCase() : 'K',
                                           style: const TextStyle(
-                                            fontFamily: 'Outfit',
                                             fontWeight: FontWeight.bold,
                                             color: AppTheme.primary,
                                             fontSize: 18,
@@ -390,7 +378,6 @@ class _ProfilePageState extends State<ProfilePage> {
                               Text(
                                 myName,
                                 style: const TextStyle(
-                                  fontFamily: 'Outfit',
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: AppTheme.textDark,
@@ -404,9 +391,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const Text(
-                                  'You 💖',
+                                  'You',
                                   style: TextStyle(
-                                    fontFamily: 'Outfit',
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                     color: AppTheme.primary,
@@ -419,7 +405,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           Text(
                             user?.email ?? '',
                             style: const TextStyle(
-                              fontFamily: 'Inter',
                               fontSize: 12,
                               color: AppTheme.textLight,
                             ),
@@ -429,7 +414,6 @@ class _ProfilePageState extends State<ProfilePage> {
                             Text(
                               'Linked with ${user?.partnerNickname ?? user?.partnerName}',
                               style: const TextStyle(
-                                fontFamily: 'Inter',
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.primary,
@@ -463,7 +447,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 const SizedBox(width: 4),
                                 const Text(
                                   'Connected',
-                                  style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: AppTheme.textLight, fontWeight: FontWeight.w600),
+                                  style: TextStyle(fontSize: 10, color: AppTheme.textLight, fontWeight: FontWeight.w600),
                                 ),
                               ],
                             ),
@@ -471,7 +455,6 @@ class _ProfilePageState extends State<ProfilePage> {
                             Text(
                               '$totalDaysOfLove Days',
                               style: const TextStyle(
-                                fontFamily: 'Outfit',
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.primary,
@@ -499,7 +482,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 const SizedBox(width: 4),
                                 const Text(
                                   'Day Streak',
-                                  style: TextStyle(fontFamily: 'Inter', fontSize: 10, color: AppTheme.textLight, fontWeight: FontWeight.w600),
+                                  style: TextStyle(fontSize: 10, color: AppTheme.textLight, fontWeight: FontWeight.w600),
                                 ),
                               ],
                             ),
@@ -507,7 +490,6 @@ class _ProfilePageState extends State<ProfilePage> {
                             Text(
                               '$streak',
                               style: TextStyle(
-                                fontFamily: 'Outfit',
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.orange[800],
@@ -623,7 +605,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       Text(
                         'Heart 2 Heart v1.0.0',
                         style: TextStyle(
-                          fontFamily: 'Outfit',
                           fontSize: 11,
                           color: AppTheme.textLight.withOpacity(0.6),
                           fontWeight: FontWeight.w600,
@@ -636,7 +617,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           Text(
                             'Made with ',
                             style: TextStyle(
-                              fontFamily: 'Inter',
                               fontSize: 10,
                               color: AppTheme.textLight.withOpacity(0.5),
                             ),
@@ -645,7 +625,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           Text(
                             ' for long-distance couples',
                             style: TextStyle(
-                              fontFamily: 'Inter',
                               fontSize: 10,
                               color: AppTheme.textLight.withOpacity(0.5),
                             ),
@@ -664,7 +643,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: const Text(
                       'Logout',
                       style: TextStyle(
-                        fontFamily: 'Outfit',
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.primary,
@@ -729,7 +707,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontFamily: 'Outfit',
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textDark,
@@ -739,7 +716,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 Text(
                   subtitle,
                   style: TextStyle(
-                    fontFamily: 'Inter',
                     fontSize: 11,
                     color: AppTheme.textLight.withValues(alpha: 0.7),
                   ),
@@ -774,7 +750,6 @@ class _ProfilePageState extends State<ProfilePage> {
       title: Text(
         title,
         style: const TextStyle(
-          fontFamily: 'Outfit',
           fontSize: 13.5,
           fontWeight: FontWeight.w600,
           color: AppTheme.textDark,
@@ -821,7 +796,7 @@ class _ProfilePageState extends State<ProfilePage> {
           padding: const EdgeInsets.only(left: 8, bottom: 8, top: 12),
           child: Text(
             title.toUpperCase(),
-            style: GoogleFonts.fredoka(
+            style: GoogleFonts.quicksand(
               fontSize: 11,
               fontWeight: FontWeight.bold,
               color: AppTheme.primary.withValues(alpha: 0.75),
@@ -858,7 +833,6 @@ class _ProfilePageState extends State<ProfilePage> {
       title: Text(
         title,
         style: const TextStyle(
-          fontFamily: 'Outfit',
           fontSize: 14,
           fontWeight: FontWeight.bold,
           color: AppTheme.textDark,
@@ -867,7 +841,6 @@ class _ProfilePageState extends State<ProfilePage> {
       subtitle: Text(
         subtitle,
         style: TextStyle(
-          fontFamily: 'Inter',
           fontSize: 11,
           color: AppTheme.textLight.withValues(alpha: 0.7),
         ),
@@ -967,7 +940,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Profile updated successfully!', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
+            content: Text('Profile updated successfully!', style: TextStyle(fontWeight: FontWeight.bold)),
             backgroundColor: Color(0xFF2E7D32),
             behavior: SnackBarBehavior.floating,
           ),
@@ -1005,7 +978,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                 children: [
                   Text(
                     'Change Password',
-                    style: GoogleFonts.fredoka(
+                    style: GoogleFonts.quicksand(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textDark,
@@ -1018,7 +991,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                     style: const TextStyle(color: AppTheme.textDark, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: 'Enter new password',
-                      hintStyle: TextStyle(fontFamily: 'Inter', color: AppTheme.textLight.withOpacity(0.5)),
+                      hintStyle: TextStyle(color: AppTheme.textLight.withOpacity(0.5)),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                     ),
                     validator: (val) {
@@ -1051,7 +1024,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Password changed successfully!', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
+                                    content: Text('Password changed successfully!', style: TextStyle(fontWeight: FontWeight.bold)),
                                     backgroundColor: Color(0xFF2E7D32),
                                     behavior: SnackBarBehavior.floating,
                                   ),
@@ -1125,7 +1098,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _nameController,
-                style: GoogleFonts.inter(fontSize: 15),
+                style: GoogleFonts.quicksand(fontSize: 15),
                 decoration: InputDecoration(
                   hintText: 'e.g., Vicky, Katija...',
                   fillColor: Colors.white,
@@ -1163,7 +1136,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                   Expanded(
                     child: _buildGenderCard(
                       label: 'Male',
-                      imagePath: 'assets/images/male_avatar_3d.png',
+                      icon: Icons.male_rounded,
                       isSelected: _gender == 'Male',
                       onTap: () => setState(() => _gender = 'Male'),
                     ),
@@ -1172,7 +1145,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                   Expanded(
                     child: _buildGenderCard(
                       label: 'Female',
-                      imagePath: 'assets/images/female_avatar_3d.png',
+                      icon: Icons.female_rounded,
                       isSelected: _gender == 'Female',
                       onTap: () => setState(() => _gender = 'Female'),
                     ),
@@ -1230,7 +1203,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                 ),
                 child: const Text(
                   'Change Password',
-                  style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1251,7 +1224,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                       )
                     : const Text(
                         'Save Changes',
-                        style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, color: Colors.white),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                       ),
               ),
             ],
@@ -1263,7 +1236,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
 
   Widget _buildGenderCard({
     required String label,
-    required String imagePath,
+    required IconData icon,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -1291,11 +1264,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
         ),
         child: Column(
           children: [
-            Image.asset(
-              imagePath,
-              width: 50,
-              height: 50,
-              fit: BoxFit.contain,
+            Icon(
+              icon,
+              size: 44,
+              color: isSelected ? Colors.white : AppTheme.textLight,
             ),
             const SizedBox(height: 8),
             Text(
@@ -1336,7 +1308,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
               child: Text(
                 label,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.quicksand(
                   fontSize: 14,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: isSelected ? AppTheme.textDark : AppTheme.textLight.withOpacity(0.7),

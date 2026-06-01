@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,6 +14,7 @@ class AuthService extends ChangeNotifier {
   UserProfile? _currentUser;
   bool _isLoading = false;
   bool _isInitialized = false;
+  StreamSubscription<DocumentSnapshot>? _userDocSubscription;
 
   UserProfile? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
@@ -54,15 +56,36 @@ class AuthService extends ChangeNotifier {
       _firebaseAuth.authStateChanges().listen((firebase_auth.User? user) async {
         if (user != null) {
           await refreshUser(user.uid);
+          _subscribeToUserDoc(user.uid);
         } else {
+          _userDocSubscription?.cancel();
+          _userDocSubscription = null;
           _currentUser = null;
           notifyListeners();
         }
       });
     } catch (e) {
+      _userDocSubscription?.cancel();
+      _userDocSubscription = null;
       _currentUser = null;
       notifyListeners();
     }
+  }
+
+  void _subscribeToUserDoc(String uid) {
+    _userDocSubscription?.cancel();
+    _userDocSubscription = _firestore
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .listen((snap) {
+      if (snap.exists && snap.data() != null) {
+        _currentUser = UserProfile.fromMap(snap.data()!);
+        notifyListeners();
+      }
+    }, onError: (e) {
+      print('Error in user doc subscription: $e');
+    });
   }
 
   void _setLoading(bool value) {
@@ -366,6 +389,19 @@ class AuthService extends ChangeNotifier {
     }).catchError((e) => print('Firestore increment sent error: $e'));
   }
 
+  void incrementEmojisSent() {
+    if (_currentUser == null) return;
+    _currentUser = _currentUser!.copyWith(
+      loveSentCount: _currentUser!.loveSentCount + 1,
+      emojisSentCount: _currentUser!.emojisSentCount + 1,
+    );
+    notifyListeners();
+    _firestore.collection('users').doc(_currentUser!.uid).update({
+      'loveSentCount': FieldValue.increment(1),
+      'emojisSentCount': FieldValue.increment(1),
+    }).catchError((e) => print('Firestore increment emojis sent error: $e'));
+  }
+
   void incrementLoveReceived() {
     if (_currentUser == null) return;
     _currentUser = _currentUser!.copyWith(
@@ -462,6 +498,8 @@ class AuthService extends ChangeNotifier {
   // Logout
   Future<void> logout() async {
     _setLoading(true);
+    _userDocSubscription?.cancel();
+    _userDocSubscription = null;
     if (_currentUser != null) {
       try {
         await _firestore.collection('users').doc(_currentUser!.uid).update({'isOnline': false});

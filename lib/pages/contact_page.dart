@@ -107,7 +107,6 @@ class _ContactPageState extends State<ContactPage> {
               const Text(
                 'Message Sent! 💌',
                 style: TextStyle(
-                  fontFamily: 'Outfit',
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -118,7 +117,6 @@ class _ContactPageState extends State<ContactPage> {
                 'Thank you for reaching out! Our team is on the case. We will reply to your registered email address as soon as possible.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontFamily: 'Inter',
                   fontSize: 13,
                   color: AppTheme.textLight,
                   height: 1.5,
@@ -163,7 +161,6 @@ class _ContactPageState extends State<ContactPage> {
           title: const Text(
             'Contact Support',
             style: TextStyle(
-              fontFamily: 'Outfit',
               fontWeight: FontWeight.bold,
               fontSize: 20,
               color: AppTheme.textDark,
@@ -182,7 +179,6 @@ class _ContactPageState extends State<ContactPage> {
                   const Text(
                     'Let\'s Get In Touch 👋',
                     style: TextStyle(
-                      fontFamily: 'Outfit',
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textDark,
@@ -192,7 +188,6 @@ class _ContactPageState extends State<ContactPage> {
                   Text(
                     'Encountered an issue or have a feature suggestion? Let us know, and we\'ll assist you.',
                     style: TextStyle(
-                      fontFamily: 'Inter',
                       fontSize: 13,
                       color: AppTheme.textLight.withOpacity(0.8),
                       height: 1.45,
@@ -204,7 +199,6 @@ class _ContactPageState extends State<ContactPage> {
                   const Text(
                     'Topic Category',
                     style: TextStyle(
-                      fontFamily: 'Outfit',
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textDark,
@@ -223,7 +217,7 @@ class _ContactPageState extends State<ContactPage> {
                         value: _selectedCategory,
                         isExpanded: true,
                         icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.textLight),
-                        style: const TextStyle(fontFamily: 'Inter', color: AppTheme.textDark, fontSize: 14),
+                        style: const TextStyle(color: AppTheme.textDark, fontSize: 14),
                         items: _categories.map((category) {
                           return DropdownMenuItem(
                             value: category,
@@ -244,7 +238,6 @@ class _ContactPageState extends State<ContactPage> {
                   const Text(
                     'Your Name',
                     style: TextStyle(
-                      fontFamily: 'Outfit',
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textDark,
@@ -253,7 +246,7 @@ class _ContactPageState extends State<ContactPage> {
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _nameController,
-                    style: const TextStyle(fontFamily: 'Inter', color: AppTheme.textDark, fontSize: 14),
+                    style: const TextStyle(color: AppTheme.textDark, fontSize: 14),
                     decoration: const InputDecoration(
                       hintText: 'Enter your name',
                       prefixIcon: Icon(Icons.person_outline_rounded, color: AppTheme.textLight, size: 20),
@@ -269,7 +262,6 @@ class _ContactPageState extends State<ContactPage> {
                   const Text(
                     'Email Address',
                     style: TextStyle(
-                      fontFamily: 'Outfit',
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textDark,
@@ -279,7 +271,7 @@ class _ContactPageState extends State<ContactPage> {
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(fontFamily: 'Inter', color: AppTheme.textDark, fontSize: 14),
+                    style: const TextStyle(color: AppTheme.textDark, fontSize: 14),
                     decoration: const InputDecoration(
                       hintText: 'Enter your email',
                       prefixIcon: Icon(Icons.mail_outline_rounded, color: AppTheme.textLight, size: 20),
@@ -296,7 +288,6 @@ class _ContactPageState extends State<ContactPage> {
                   const Text(
                     'Describe the Issue or Feedback',
                     style: TextStyle(
-                      fontFamily: 'Outfit',
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textDark,
@@ -306,7 +297,7 @@ class _ContactPageState extends State<ContactPage> {
                   TextFormField(
                     controller: _messageController,
                     maxLines: 5,
-                    style: const TextStyle(fontFamily: 'Inter', color: AppTheme.textDark, fontSize: 14),
+                    style: const TextStyle(color: AppTheme.textDark, fontSize: 14),
                     decoration: const InputDecoration(
                       hintText: 'Type your message here...',
                       alignLabelWithHint: true,

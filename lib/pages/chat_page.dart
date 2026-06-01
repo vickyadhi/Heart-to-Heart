@@ -124,7 +124,6 @@ class _ChatPageState extends State<ChatPage> {
             child: Text(
               dateStr,
               style: TextStyle(
-                fontFamily: 'Outfit',
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.textLight.withOpacity(0.5),
@@ -212,7 +211,6 @@ class _ChatPageState extends State<ChatPage> {
                         ? Text(
                             widget.partnerName.isNotEmpty ? widget.partnerName[0].toUpperCase() : 'K',
                             style: const TextStyle(
-                              fontFamily: 'Outfit',
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFFEF5350),
@@ -226,7 +224,6 @@ class _ChatPageState extends State<ChatPage> {
                 Text(
                   widget.partnerName,
                   style: const TextStyle(
-                    fontFamily: 'Outfit',
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFFEF5350), // Red/coral matching Katija text in Image 2
@@ -250,7 +247,6 @@ class _ChatPageState extends State<ChatPage> {
                     Text(
                       (conn.partnerShowOnline && conn.partnerIsOnline) ? 'Online' : 'Offline',
                       style: TextStyle(
-                        fontFamily: 'Outfit',
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                         color: (conn.partnerShowOnline && conn.partnerIsOnline)
@@ -281,7 +277,6 @@ class _ChatPageState extends State<ChatPage> {
                         Text(
                           'No love taps sent yet.',
                           style: TextStyle(
-                            fontFamily: 'Outfit',
                             color: AppTheme.textLight.withOpacity(0.5),
                             fontWeight: FontWeight.w600,
                           ),
@@ -289,7 +284,6 @@ class _ChatPageState extends State<ChatPage> {
                         Text(
                           'Tap the heart on home to show you care!',
                           style: TextStyle(
-                            fontFamily: 'Outfit',
                             fontSize: 12,
                             color: AppTheme.textLight.withOpacity(0.4),
                           ),
@@ -340,7 +334,6 @@ class _ChatPageState extends State<ChatPage> {
                             }
                           },
                           style: const TextStyle(
-                            fontFamily: 'Outfit',
                             color: AppTheme.textDark,
                             fontSize: 15,
                           ),
@@ -348,7 +341,6 @@ class _ChatPageState extends State<ChatPage> {
                           decoration: const InputDecoration(
                             hintText: 'Write your message...',
                             hintStyle: TextStyle(
-                              fontFamily: 'Outfit',
                               color: Color(0x99796E70),
                               fontSize: 15,
                             ),

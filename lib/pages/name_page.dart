@@ -75,8 +75,8 @@ class _NamePageState extends State<NamePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Please select your anniversary date 💖',
-            style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.w600),
+            'Please select your anniversary date',
+            style: TextStyle(fontWeight: FontWeight.w600),
           ),
           backgroundColor: AppTheme.primary,
           behavior: SnackBarBehavior.floating,
@@ -164,7 +164,6 @@ class _NamePageState extends State<NamePage> {
                             'Tell Us Your Love Details',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontFamily: 'Outfit',
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.textDark,
@@ -176,7 +175,6 @@ class _NamePageState extends State<NamePage> {
                             'We will use this to track important dates\nand milestones for your connection.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontFamily: 'Inter',
                               fontSize: 13,
                               color: AppTheme.textLight,
                               height: 1.5,
@@ -189,7 +187,7 @@ class _NamePageState extends State<NamePage> {
                             title: 'Your Nickname',
                             child: TextFormField(
                               controller: _nameController,
-                              style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, color: AppTheme.textDark, fontSize: 16),
+                              style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark, fontSize: 16),
                               decoration: const InputDecoration(
                                 hintText: 'Enter your name (e.g. Rambo)...',
                                 filled: false,
@@ -208,7 +206,7 @@ class _NamePageState extends State<NamePage> {
                             title: "Partner's Nickname",
                             child: TextFormField(
                               controller: _partnerNicknameController,
-                              style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, color: AppTheme.textDark, fontSize: 16),
+                              style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textDark, fontSize: 16),
                               decoration: const InputDecoration(
                                 hintText: 'Enter their nickname (e.g. Kajal)...',
                                 filled: false,
@@ -224,7 +222,7 @@ class _NamePageState extends State<NamePage> {
 
                           // ANNIVERSARY DATE SELECT CARD
                           _buildInputCard(
-                            title: 'Your Anniversary Date 💖',
+                            title: 'Your Anniversary Date',
                             child: InkWell(
                               onTap: _pickDate,
                               child: Padding(
@@ -237,7 +235,6 @@ class _NamePageState extends State<NamePage> {
                                           ? 'Select date...'
                                           : '${_selectedAnniversary!.year}-${_selectedAnniversary!.month.toString().padLeft(2, '0')}-${_selectedAnniversary!.day.toString().padLeft(2, '0')}',
                                       style: TextStyle(
-                                        fontFamily: 'Outfit',
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
                                         color: _selectedAnniversary == null 
@@ -302,8 +299,7 @@ class _NamePageState extends State<NamePage> {
         children: [
           Text(
             title,
-            style: TextStyle(fontFamily: 'Outfit', 
-              color: AppTheme.primary,
+            style: TextStyle(color: AppTheme.primary,
               fontWeight: FontWeight.bold,
               fontSize: 13,
             ),

@@ -20,7 +20,8 @@ class LoveWidgetProvider : AppWidgetProvider() {
             Context.MODE_PRIVATE
         )
         val partnerName = prefs.getString("partner_name", "Partner") ?: "Partner"
-        val statusMessage = prefs.getString("status_message", "No taps received yet 🥺") ?: "No taps received yet 🥺"
+        val statusMessage = prefs.getString("status_message", "No taps received yet") ?: "No taps received yet"
+        val receivedNote = prefs.getString("received_note", "No notes yet") ?: "No notes yet"
 
         // Update all active widget instances on the home screen
         for (appWidgetId in appWidgetIds) {
@@ -29,8 +30,9 @@ class LoveWidgetProvider : AppWidgetProvider() {
             // Set dynamic partner name and interaction details
             views.setTextViewText(R.id.widget_title, partnerName)
             views.setTextViewText(R.id.widget_status, statusMessage)
+            views.setTextViewText(R.id.widget_note_text, receivedNote)
 
-            // 1. Core Heart tap — uses HomeWidgetLaunchIntent (new interactivity API)
+            // 1. Core Heart tap — opens app
             val heartIntent = HomeWidgetLaunchIntent.getActivity(
                 context,
                 MainActivity::class.java,
@@ -38,7 +40,7 @@ class LoveWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.widget_main_heart, heartIntent)
 
-            // 2. Miss You emoji tap
+            // 2. Miss You emoji tap — triggers backgroundCallback which sends event to partner
             val missYouIntent = HomeWidgetLaunchIntent.getActivity(
                 context,
                 MainActivity::class.java,
@@ -70,7 +72,7 @@ class LoveWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.widget_emoji_thinking, thinkingIntent)
 
-            // Commit visual update trigger
+            // Commit visual update
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
     }

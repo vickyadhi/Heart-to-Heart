@@ -51,9 +51,8 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Successfully connected with partner! 💖',
+                      'Successfully connected with partner!',
                       style: TextStyle(
-                        fontFamily: 'Outfit',
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -152,9 +151,8 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'Pairing Request! 💖',
+                  'Pairing Request!',
                   style: TextStyle(
-                    fontFamily: 'Outfit',
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textDark,
@@ -165,7 +163,6 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                   textAlign: TextAlign.center,
                   text: TextSpan(
                     style: const TextStyle(
-                      fontFamily: 'Inter',
                       fontSize: 14,
                       color: AppTheme.textDark,
                       height: 1.5,
@@ -195,7 +192,7 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           foregroundColor: AppTheme.textLight,
                         ),
-                        child: const Text('Decline', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
+                        child: const Text('Decline', style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -219,7 +216,7 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           backgroundColor: AppTheme.primary,
                         ),
-                        child: const Text('Connect', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold)),
+                        child: const Text('Connect', style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ],
@@ -260,7 +257,6 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                   "Let's Connect Your Hearts",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontFamily: 'Outfit',
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textDark,
@@ -271,7 +267,6 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                   "Share the code and bring your love online",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontFamily: 'Inter',
                     fontSize: 13,
                     color: AppTheme.textLight,
                   ),
@@ -301,8 +296,8 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                     indicatorSize: TabBarIndicatorSize.tab,
                     labelColor: AppTheme.primary,
                     unselectedLabelColor: AppTheme.textLight,
-                    labelStyle: const TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, fontSize: 13),
-                    unselectedLabelStyle: const TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.w600, fontSize: 13),
+                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                     dividerColor: Colors.transparent,
                     tabs: const [
                       Tab(text: 'Generate Pairing Code'),
@@ -345,7 +340,6 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                     child: const Text(
                       'Logout',
                       style: TextStyle(
-                        fontFamily: 'Outfit',
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         decoration: TextDecoration.underline,
@@ -403,7 +397,6 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                               : Text(
                                   digit,
                                   style: const TextStyle(
-                                    fontFamily: 'Outfit',
                                     fontSize: 32,
                                     fontWeight: FontWeight.bold,
                                     color: AppTheme.primary,
@@ -424,8 +417,7 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                     ),
                     child: const Text(
                       'Generate new code',
-                      style: TextStyle(fontFamily: 'Outfit', 
-                        color: AppTheme.textDark,
+                      style: TextStyle(color: AppTheme.textDark,
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
@@ -479,7 +471,6 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                             keyboardType: TextInputType.number,
                             maxLength: 1,
                             style: const TextStyle(
-                              fontFamily: 'Outfit',
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.primary,

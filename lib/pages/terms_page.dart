@@ -20,7 +20,6 @@ class TermsPage extends StatelessWidget {
           title: const Text(
             'Terms of Service',
             style: TextStyle(
-              fontFamily: 'Outfit',
               fontWeight: FontWeight.bold,
               fontSize: 20,
               color: AppTheme.textDark,
@@ -37,7 +36,6 @@ class TermsPage extends StatelessWidget {
                 Text(
                   'Last updated: May 28, 2026',
                   style: TextStyle(
-                    fontFamily: 'Inter',
                     fontSize: 12,
                     color: AppTheme.textLight.withOpacity(0.6),
                   ),
@@ -112,7 +110,6 @@ class TermsPage extends StatelessWidget {
       child: Text(
         title,
         style: const TextStyle(
-          fontFamily: 'Outfit',
           fontSize: 14,
           fontWeight: FontWeight.bold,
           color: AppTheme.textDark,
@@ -125,7 +122,6 @@ class TermsPage extends StatelessWidget {
     return Text(
       body,
       style: const TextStyle(
-        fontFamily: 'Inter',
         fontSize: 12,
         color: AppTheme.textLight,
         height: 1.5,

@@ -39,6 +39,7 @@ class UserProfile {
 
   // Sticky notes — each user can write a note for both to see
   final String? stickyNote;
+  final int emojisSentCount;
 
   UserProfile({
     required this.uid,
@@ -74,6 +75,7 @@ class UserProfile {
     this.locationUpdatedAt,
     this.setupComplete = false,
     this.stickyNote,
+    this.emojisSentCount = 0,
   });
 
   UserProfile copyWith({
@@ -110,6 +112,7 @@ class UserProfile {
     DateTime? locationUpdatedAt,
     bool? setupComplete,
     String? stickyNote,
+    int? emojisSentCount,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -145,6 +148,7 @@ class UserProfile {
       locationUpdatedAt: locationUpdatedAt ?? this.locationUpdatedAt,
       setupComplete: setupComplete ?? this.setupComplete,
       stickyNote: stickyNote ?? this.stickyNote,
+      emojisSentCount: emojisSentCount ?? this.emojisSentCount,
     );
   }
 
@@ -183,6 +187,7 @@ class UserProfile {
       locationUpdatedAt: locationUpdatedAt,
       setupComplete: setupComplete,
       stickyNote: stickyNote,
+      emojisSentCount: emojisSentCount,
     );
   }
 
@@ -221,6 +226,7 @@ class UserProfile {
       'locationUpdatedAt': locationUpdatedAt?.toIso8601String(),
       'setupComplete': setupComplete,
       'stickyNote': stickyNote,
+      'emojisSentCount': emojisSentCount,
     };
   }
 
@@ -259,6 +265,7 @@ class UserProfile {
       locationUpdatedAt: map['locationUpdatedAt'] != null ? DateTime.tryParse(map['locationUpdatedAt']) : null,
       setupComplete: map['setupComplete'] ?? false,
       stickyNote: map['stickyNote'],
+      emojisSentCount: map['emojisSentCount'] ?? 0,
     );
   }
 }

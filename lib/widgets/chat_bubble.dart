@@ -124,7 +124,6 @@ class ChatBubble extends StatelessWidget {
                             Text(
                               event.message, // Duration string, e.g. "0:05"
                               style: TextStyle(
-                                fontFamily: 'Outfit',
                                 color: textColor.withOpacity(0.8),
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -135,7 +134,6 @@ class ChatBubble extends StatelessWidget {
                       : Text(
                           isSelf ? event.selfDisplayTitle : event.displayTitle,
                           style: TextStyle(
-                            fontFamily: 'Outfit',
                             color: textColor,
                             fontSize: 14.5,
                             fontWeight: isChat ? FontWeight.normal : FontWeight.w600,
@@ -177,7 +175,6 @@ class ChatBubble extends StatelessWidget {
             ? Text(
                 initial.toUpperCase(),
                 style: const TextStyle(
-                  fontFamily: 'Outfit',
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFFEF5350),

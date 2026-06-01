@@ -289,7 +289,23 @@ class ConnectionService extends ChangeNotifier {
                 ? DateTime.tryParse(data['connectedAt'] as String)
                 : null,
           );
+        }
+        
+        // ALWAYS ensure we are subscribed to events and partner details on startup
+        if (_eventsSubscription == null || _partnerSubscription == null) {
           _subscribeToEvents();
+        }
+        
+        // Trigger widget update since my user document changed (e.g. sticky note updated by partner)
+        if (_authService.currentUser?.partnerName != null) {
+          final latest = _events.isNotEmpty ? _events.first : null;
+          final statusMsg = latest != null 
+              ? '${_authService.currentUser?.partnerName} ${_getDefaultMessage(latest.type)}'
+              : 'No taps yet';
+          updateHomeScreenWidget(
+            _authService.currentUser?.partnerName ?? 'Partner',
+            statusMsg,
+          );
         }
       } else {
         // No partner (or unpaired)
@@ -334,6 +350,9 @@ class ConnectionService extends ChangeNotifier {
             if (latestEvent.senderId == partnerId && !_containsEvent(latestEvent.id)) {
               onIncomingLoveEvent?.call(latestEvent);
               _authService.incrementLoveReceived();
+              // Instantly mark partner as online
+              _partnerIsOnline = true;
+              notifyListeners();
             }
           }
 
@@ -379,6 +398,21 @@ class ConnectionService extends ChangeNotifier {
         _partnerGender = data['gender'] as String?;
         _partnerStickyNote = data['stickyNote'] as String?;
         notifyListeners();
+        
+        // Trigger widget update so partner's status changes are reflected!
+        if (_events.isNotEmpty) {
+          final latest = _events.first;
+          final displayMsg = _getDefaultMessage(latest.type);
+          updateHomeScreenWidget(
+            _authService.currentUser?.partnerName ?? 'Partner',
+            '${_authService.currentUser?.partnerName ?? 'Partner'} $displayMsg',
+          );
+        } else {
+          updateHomeScreenWidget(
+            _authService.currentUser?.partnerName ?? 'Partner',
+            'No taps yet',
+          );
+        }
       }
     });
   }
@@ -651,15 +685,40 @@ class ConnectionService extends ChangeNotifier {
       timestamp: DateTime.now(),
     );
 
-    _authService.incrementLoveSent();
+    // Call correct counter update
+    if (type == 'miss_you' || type == 'sad' || type == 'excited' || type == 'thinking') {
+      _authService.incrementEmojisSent();
+    } else {
+      _authService.incrementLoveSent();
+    }
+
+    // Dynamic Love Streak Calculation
+    int currentStreak = _authService.currentUser?.streakCount ?? 0;
+    final now = DateTime.now();
+    if (_events.isEmpty) {
+      currentStreak = 1;
+    } else {
+      final lastEvent = _events.first;
+      final lastDate = lastEvent.timestamp;
+      final differenceInDays = DateTime(now.year, now.month, now.day)
+          .difference(DateTime(lastDate.year, lastDate.month, lastDate.day))
+          .inDays;
+
+      if (differenceInDays == 1) {
+        currentStreak += 1;
+      } else if (differenceInDays > 1) {
+        currentStreak = 1;
+      } else if (differenceInDays == 0 && currentStreak == 0) {
+        currentStreak = 1;
+      }
+    }
 
     try {
-      await _firestore
-          .collection('conversations')
-          .doc(convoId)
-          .collection('events')
-          .doc(eventId)
-          .set(event.toMap());
+      final batch = _firestore.batch();
+      batch.set(_firestore.collection('conversations').doc(convoId).collection('events').doc(eventId), event.toMap());
+      batch.update(_firestore.collection('users').doc(myId), {'streakCount': currentStreak});
+      batch.update(_firestore.collection('users').doc(partnerId), {'streakCount': currentStreak});
+      await batch.commit();
 
       // Log partner FCM token for background notification delivery
       final partnerDoc = await _firestore.collection('users').doc(partnerId).get();
@@ -712,14 +771,16 @@ class ConnectionService extends ChangeNotifier {
 
   Future<void> updateHomeScreenWidget(String partnerName, String statusMessage) async {
     try {
+      final receivedNote = _authService.currentUser?.stickyNote ?? '';
       await HomeWidget.saveWidgetData<String>('partner_name', partnerName);
       await HomeWidget.saveWidgetData<String>('status_message', statusMessage);
+      await HomeWidget.saveWidgetData<String>('received_note', receivedNote);
       await HomeWidget.updateWidget(
         name: 'LoveWidgetProvider',
         androidName: 'LoveWidgetProvider',
         iOSName: 'LoveWidget',
       );
-      print('💚 [h2h] Home Screen Widget updated successfully!');
+      print('💚 [h2h] Home Screen Widget updated successfully! Note: "$receivedNote"');
     } catch (e) {
       print('🧡 [h2h] Error updating home screen widget: $e');
     }

@@ -20,7 +20,6 @@ class HelpPage extends StatelessWidget {
           title: const Text(
             'Help Center',
             style: TextStyle(
-              fontFamily: 'Outfit',
               fontWeight: FontWeight.bold,
               fontSize: 20,
               color: AppTheme.textDark,
@@ -37,7 +36,6 @@ class HelpPage extends StatelessWidget {
                 const Text(
                   'How can we help you today? 🌸',
                   style: TextStyle(
-                    fontFamily: 'Outfit',
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textDark,
@@ -47,7 +45,6 @@ class HelpPage extends StatelessWidget {
                 Text(
                   'Find answers to frequently asked questions or learn how to optimize your Heart to Heart experience.',
                   style: TextStyle(
-                    fontFamily: 'Inter',
                     fontSize: 13,
                     color: AppTheme.textLight.withOpacity(0.8),
                     height: 1.5,
@@ -59,7 +56,6 @@ class HelpPage extends StatelessWidget {
                 const Text(
                   'Frequently Asked Questions',
                   style: TextStyle(
-                    fontFamily: 'Outfit',
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textDark,
@@ -122,7 +118,6 @@ class HelpPage extends StatelessWidget {
                           Text(
                             'Quick Vibration Tip 📳',
                             style: TextStyle(
-                              fontFamily: 'Outfit',
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.textDark,
@@ -134,7 +129,6 @@ class HelpPage extends StatelessWidget {
                       Text(
                         'If you aren\'t receiving vibrations when your partner taps the heart, make sure the "Vibration" switch is turned on in your Profile settings, and verify that your system settings allow app-level vibrations.',
                         style: TextStyle(
-                          fontFamily: 'Inter',
                           fontSize: 12,
                           color: AppTheme.textLight.withOpacity(0.9),
                           height: 1.45,
@@ -163,7 +157,6 @@ class HelpPage extends StatelessWidget {
         title: Text(
           question,
           style: const TextStyle(
-            fontFamily: 'Outfit',
             fontSize: 14,
             fontWeight: FontWeight.bold,
             color: AppTheme.textDark,
@@ -178,7 +171,6 @@ class HelpPage extends StatelessWidget {
           Text(
             answer,
             style: const TextStyle(
-              fontFamily: 'Inter',
               fontSize: 12.5,
               color: AppTheme.textLight,
               height: 1.45,

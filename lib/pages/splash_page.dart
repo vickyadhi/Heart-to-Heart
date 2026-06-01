@@ -161,7 +161,6 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                       const Text(
                         'h2h',
                         style: TextStyle(
-                          fontFamily: 'Outfit',
                           fontSize: 48,
                           fontWeight: FontWeight.w900,
                           color: Colors.white,

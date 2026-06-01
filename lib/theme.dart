@@ -74,25 +74,25 @@ class AppTheme {
         surface: cardBg,
         error: Colors.redAccent,
       ),
-      fontFamily: 'Outfit',
+      fontFamily: GoogleFonts.quicksand().fontFamily,
       scaffoldBackgroundColor: const Color(0xFFFFF9FA),
       textTheme: TextTheme(
-        displayLarge: GoogleFonts.fredoka(
+        displayLarge: GoogleFonts.quicksand(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textDark,
         ),
-        displayMedium: GoogleFonts.fredoka(
+        displayMedium: GoogleFonts.quicksand(
           fontSize: 26,
           fontWeight: FontWeight.bold,
           color: textDark,
         ),
-        displaySmall: GoogleFonts.fredoka(
+        displaySmall: GoogleFonts.quicksand(
           fontSize: 20,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.bold,
           color: textDark,
         ),
-        headlineMedium: GoogleFonts.fredoka(
+        headlineMedium: GoogleFonts.quicksand(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textDark,
@@ -102,12 +102,14 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: textDark,
         ),
-        bodyLarge: GoogleFonts.inter(
+        bodyLarge: GoogleFonts.quicksand(
           fontSize: 15,
+          fontWeight: FontWeight.w500,
           color: textDark,
         ),
-        bodyMedium: GoogleFonts.inter(
+        bodyMedium: GoogleFonts.quicksand(
           fontSize: 13,
+          fontWeight: FontWeight.w500,
           color: textLight,
         ),
         labelLarge: GoogleFonts.quicksand(
@@ -126,8 +128,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          textStyle: const TextStyle(
-            fontFamily: 'Outfit',
+          textStyle: GoogleFonts.quicksand(
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -142,7 +143,6 @@ class AppTheme {
             borderRadius: BorderRadius.circular(24),
           ),
           textStyle: const TextStyle(
-            fontFamily: 'Outfit',
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -152,7 +152,6 @@ class AppTheme {
         filled: true,
         fillColor: Colors.white.withValues(alpha: 0.8),
         hintStyle: const TextStyle(
-          fontFamily: 'Outfit',
           color: Color(0x99796E70),
           fontSize: 14,
         ),

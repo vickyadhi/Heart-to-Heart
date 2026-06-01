@@ -12,6 +12,8 @@ import '../services/connection_service.dart';
 import '../widgets/bottom_nav_bar.dart';
 import '../widgets/pulsing_heart.dart';
 import '../widgets/floating_hearts.dart';
+import '../widgets/editable_sticky_note.dart';
+import '../widgets/skeleton_loader.dart';
 import '../theme.dart';
 import 'chat_page.dart';
 import 'profile_page.dart';
@@ -81,7 +83,7 @@ class _DashboardPageState extends State<DashboardPage> {
       SnackBar(
         content: Text(
           'Sent "$label" $emoji to $partnerName!',
-          style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.w600),
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: AppTheme.primary,
         behavior: SnackBarBehavior.floating,
@@ -108,9 +110,13 @@ class _DashboardPageState extends State<DashboardPage> {
           }
         });
       }
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(color: AppTheme.primary),
+      return Container(
+        decoration: AppTheme.romanticGradient(),
+        child: const Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+            child: SkeletonLoader(),
+          ),
         ),
       );
     }
@@ -216,7 +222,6 @@ class _DashboardPageState extends State<DashboardPage> {
                             Text(
                               partnerName,
                               style: const TextStyle(
-                                fontFamily: 'Outfit',
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
                                 color: AppTheme.textDark,
@@ -226,7 +231,6 @@ class _DashboardPageState extends State<DashboardPage> {
                             Text(
                               _incomingAlertEvent!.displayTitle,
                               style: const TextStyle(
-                                fontFamily: 'Inter',
                                 fontSize: 13,
                                 color: AppTheme.primary,
                                 fontWeight: FontWeight.w500,
@@ -248,9 +252,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildHomeDashboard(AuthService auth, ConnectionService conn, String partnerName) {
     final user = auth.currentUser;
-    final streak = user?.streakCount ?? 127;
-    final sent = user?.loveSentCount ?? 324;
-    final hearts = user?.heartsCount ?? 8;
+    final streak = user?.streakCount ?? 0;
+    final sent = user?.loveSentCount ?? 0;
+    final emojisSent = user?.emojisSentCount ?? 0;
     
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 360;
@@ -289,7 +293,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           backgroundColor: Colors.pink.withOpacity(0.1),
                           child: Text(
                             partnerName[0].toUpperCase(),
-                            style: const TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold, color: AppTheme.primary),
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary),
                           ),
                         ),
                       ),
@@ -302,7 +306,6 @@ class _DashboardPageState extends State<DashboardPage> {
                               Text(
                                 'Connected to',
                                 style: TextStyle(
-                                  fontFamily: 'Inter',
                                   fontSize: 12,
                                   color: AppTheme.textLight.withOpacity(0.8),
                                 ),
@@ -314,7 +317,6 @@ class _DashboardPageState extends State<DashboardPage> {
                               Text(
                                 partnerName,
                                 style: const TextStyle(
-                                  fontFamily: 'Outfit',
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: AppTheme.textDark,
@@ -351,8 +353,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       children: [
                         Text(
                           '$streak',
-                          style: TextStyle(fontFamily: 'Outfit', 
-                            fontSize: 12,
+                          style: TextStyle(fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: Colors.orange[700],
                           ),
@@ -371,7 +372,6 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: Text(
                   'Tap to send love',
                   style: TextStyle(
-                    fontFamily: 'Inter',
                     fontSize: 13,
                     color: AppTheme.textLight.withOpacity(0.7),
                     letterSpacing: 0.5,
@@ -454,9 +454,9 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _buildStatsCard(
-                      icon: Icon(Icons.diamond_rounded, color: Colors.blueAccent, size: isSmallScreen ? 18.0 : 22.0),
-                      value: '$hearts',
-                      label: 'Hearts',
+                      icon: Icon(Icons.emoji_emotions_rounded, color: Colors.amber, size: isSmallScreen ? 18.0 : 22.0),
+                      value: '$emojisSent',
+                      label: 'Emojis Sent',
                       context: context,
                     ),
                   ),
@@ -476,7 +476,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       child: const Text(
                         'h2h',
                         style: TextStyle(
-                          fontFamily: 'Outfit',
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -488,7 +487,6 @@ class _DashboardPageState extends State<DashboardPage> {
                     Text(
                       'Connected • Closer • Forever',
                       style: TextStyle(
-                        fontFamily: 'Inter',
                         fontSize: 11,
                         color: AppTheme.textLight.withOpacity(0.6),
                         fontWeight: FontWeight.bold,
@@ -508,7 +506,6 @@ class _DashboardPageState extends State<DashboardPage> {
                         Text(
                           'Crafted with ',
                           style: TextStyle(
-                            fontFamily: 'Inter',
                             fontSize: 10,
                             color: AppTheme.textLight.withOpacity(0.5),
                           ),
@@ -517,7 +514,6 @@ class _DashboardPageState extends State<DashboardPage> {
                         Text(
                           ' in India',
                           style: TextStyle(
-                            fontFamily: 'Inter',
                             fontSize: 10,
                             color: AppTheme.textLight.withOpacity(0.5),
                           ),
@@ -592,7 +588,6 @@ class _DashboardPageState extends State<DashboardPage> {
                 Text(
                   "$partnerName's Battery Status",
                   style: const TextStyle(
-                    fontFamily: 'Outfit',
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textDark,
@@ -608,7 +603,6 @@ class _DashboardPageState extends State<DashboardPage> {
                               ? 'Low battery alert'
                               : 'Unplugged',
                   style: TextStyle(
-                    fontFamily: 'Inter',
                     fontSize: 11,
                     color: isLowBattery 
                         ? Colors.redAccent 
@@ -622,7 +616,6 @@ class _DashboardPageState extends State<DashboardPage> {
           Text(
             batteryLevel != null ? '$batteryLevel%' : '--%',
             style: const TextStyle(
-              fontFamily: 'Outfit',
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: AppTheme.textDark,
@@ -692,7 +685,6 @@ class _DashboardPageState extends State<DashboardPage> {
                     Text(
                       "$partnerName is $status",
                       style: const TextStyle(
-                        fontFamily: 'Outfit',
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.textDark,
@@ -713,7 +705,6 @@ class _DashboardPageState extends State<DashboardPage> {
                         Text(
                           partnerOnline ? 'Active on app now' : 'Offline right now',
                           style: TextStyle(
-                            fontFamily: 'Inter',
                             fontSize: 11,
                             color: partnerOnline ? AppTheme.success : AppTheme.textLight.withValues(alpha: 0.8),
                           ),
@@ -731,7 +722,6 @@ class _DashboardPageState extends State<DashboardPage> {
           const Text(
             "Update your status:",
             style: TextStyle(
-              fontFamily: 'Outfit',
               fontSize: 12,
               fontWeight: FontWeight.bold,
               color: AppTheme.textDark,
@@ -785,7 +775,6 @@ class _DashboardPageState extends State<DashboardPage> {
             Text(
               status,
               style: TextStyle(
-                fontFamily: 'Outfit',
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
                 color: isSelected ? Colors.white : AppTheme.textDark,
@@ -839,7 +828,6 @@ class _DashboardPageState extends State<DashboardPage> {
                   const Text(
                     "Next Meeting",
                     style: TextStyle(
-                      fontFamily: 'Outfit',
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textDark,
@@ -871,7 +859,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     await auth.updateNextMeetingDate(picked);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: const Text('Next meeting date updated!', style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.w600)),
+                        content: const Text('Next meeting date updated!', style: TextStyle(fontWeight: FontWeight.w600)),
                         backgroundColor: AppTheme.primary,
                         behavior: SnackBarBehavior.floating,
                       ),
@@ -881,7 +869,6 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: Text(
                   hasDate ? "Change Date" : "Schedule",
                   style: const TextStyle(
-                    fontFamily: 'Outfit',
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.primary,
@@ -907,7 +894,6 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Text(
                 "until we see each other again!",
                 style: TextStyle(
-                  fontFamily: 'Inter',
                   fontSize: 11,
                   color: AppTheme.textLight.withValues(alpha: 0.8),
                 ),
@@ -939,12 +925,12 @@ class _DashboardPageState extends State<DashboardPage> {
                     const SizedBox(height: 8),
                     const Text(
                       "No meeting scheduled yet.",
-                      style: TextStyle(fontFamily: 'Outfit', fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textDark),
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textDark),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       "Tap here to countdown to your next flight!",
-                      style: TextStyle(fontFamily: 'Inter', fontSize: 11, color: AppTheme.textLight.withValues(alpha: 0.8)),
+                      style: TextStyle(fontSize: 11, color: AppTheme.textLight.withValues(alpha: 0.8)),
                     ),
                   ],
                 ),
@@ -968,7 +954,6 @@ class _DashboardPageState extends State<DashboardPage> {
           child: Text(
             value,
             style: const TextStyle(
-              fontFamily: 'Outfit',
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: AppTheme.primary,
@@ -979,7 +964,6 @@ class _DashboardPageState extends State<DashboardPage> {
         Text(
           label,
           style: const TextStyle(
-            fontFamily: 'Inter',
             fontSize: 9,
             fontWeight: FontWeight.bold,
             color: Colors.grey,
@@ -1019,7 +1003,6 @@ class _DashboardPageState extends State<DashboardPage> {
           Text(
             value,
             style: TextStyle(
-              fontFamily: 'Outfit',
               fontSize: isSmallScreen ? 15.0 : 18.0,
               fontWeight: FontWeight.bold,
               color: AppTheme.textDark,
@@ -1031,7 +1014,6 @@ class _DashboardPageState extends State<DashboardPage> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontFamily: 'Inter',
               fontSize: isSmallScreen ? 8.5 : 10.0,
               fontWeight: FontWeight.bold,
               color: AppTheme.textLight.withOpacity(0.7),
@@ -1079,8 +1061,8 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Love Draw 🎨',
-                style: GoogleFonts.fredoka(
+                'Love Draw',
+                style: GoogleFonts.quicksand(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -1090,7 +1072,7 @@ class _DashboardPageState extends State<DashboardPage> {
               if (hasDrawing)
                 Text(
                   isFromPartner ? 'New from $partnerName!' : 'Sent by you',
-                  style: GoogleFonts.inter(
+                  style: GoogleFonts.quicksand(
                     fontSize: 11,
                     color: isFromPartner ? AppTheme.primary : AppTheme.textLight,
                     fontWeight: FontWeight.bold,
@@ -1186,7 +1168,7 @@ class _DashboardPageState extends State<DashboardPage> {
               Expanded(
                 child: Text(
                   "Partner's Location",
-                  style: GoogleFonts.fredoka(
+                  style: GoogleFonts.quicksand(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textDark,
@@ -1228,7 +1210,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     const SizedBox(height: 12),
                     Text(
                       'Waiting for $partnerName\'s location...',
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.quicksand(
                         fontSize: 12,
                         color: AppTheme.textLight,
                         fontWeight: FontWeight.w500,
@@ -1239,100 +1221,155 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             )
           else
-            Container(
-              height: 180,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: fm.FlutterMap(
-                options: fm.MapOptions(
-                  initialCenter: LatLng(lat, lng),
-                  initialZoom: 14.5,
-                ),
-                children: [
-                  fm.TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.example.h2h',
+            Builder(builder: (context) {
+              // Guard: ensure lat/lng are valid finite numbers
+              if (lat == null || lng == null || lat.isNaN || lng.isNaN || lat.isInfinite || lng.isInfinite) {
+                return Container(
+                  height: 180,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  fm.MarkerLayer(
-                    markers: [
-                      fm.Marker(
-                        width: 50,
-                        height: 50,
-                        point: LatLng(lat, lng),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: AppTheme.primary, width: 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
-                                blurRadius: 6,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: ClipOval(
-                            child: _buildPartnerMapAvatar(partnerPhoto, partnerGender ?? 'Other'),
-                          ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text('📍', style: TextStyle(fontSize: 32)),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Waiting for $partnerName\'s location...',
+                          style: GoogleFonts.quicksand(fontSize: 12, color: AppTheme.textLight, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: fm.FlutterMap(
+                      options: fm.MapOptions(
+                        initialCenter: LatLng(lat, lng),
+                        initialZoom: 14.5,
+                        minZoom: 10.0,
+                        maxZoom: 18.0,
+                        interactionOptions: const fm.InteractionOptions(
+                          flags: fm.InteractiveFlag.pinchZoom | fm.InteractiveFlag.drag,
                         ),
                       ),
-                    ],
+                      children: [
+                        fm.TileLayer(
+                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.example.h2h',
+                        ),
+                        fm.MarkerLayer(
+                          markers: [
+                            fm.Marker(
+                              width: 56,
+                              height: 56,
+                              point: LatLng(lat, lng),
+                              child: _buildMapMarker(partnerPhoto, partnerGender ?? 'Other'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
+                  if (conn.partnerLocationUpdatedAt != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Icon(Icons.refresh_rounded, size: 12, color: AppTheme.textLight.withValues(alpha: 0.6)),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Updated ${_formatLocationTime(conn.partnerLocationUpdatedAt!)}',
+                          style: GoogleFonts.quicksand(fontSize: 11, color: AppTheme.textLight.withValues(alpha: 0.7)),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
-              ),
-            ),
+              );
+            }),
         ],
       ),
     );
   }
 
-  Widget _buildPartnerMapAvatar(String? photoUrl, String gender) {
-    if (photoUrl == null || photoUrl.isEmpty) {
-      return _genderEmojiContainer(gender);
-    }
-    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
-      return Image.network(
-        photoUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (ctx, err, stack) => _genderEmojiContainer(gender),
-      );
-    }
-    try {
-      String base64Str = photoUrl;
-      if (photoUrl.contains(',')) {
-        base64Str = photoUrl.split(',').last;
+  // Map marker with photo or 3D emoji, no boxy background
+  Widget _buildMapMarker(String? photoUrl, String gender) {
+    Widget avatar;
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+        avatar = ClipOval(
+          child: Image.network(
+            photoUrl,
+            width: 44,
+            height: 44,
+            fit: BoxFit.cover,
+            errorBuilder: (ctx, err, stack) => _genderEmojiMarker(gender),
+          ),
+        );
+      } else {
+        try {
+          String base64Str = photoUrl;
+          if (photoUrl.contains(',')) base64Str = photoUrl.split(',').last;
+          avatar = ClipOval(
+            child: Image.memory(
+              base64Decode(base64Str),
+              width: 44,
+              height: 44,
+              fit: BoxFit.cover,
+              errorBuilder: (ctx, err, stack) => _genderEmojiMarker(gender),
+            ),
+          );
+        } catch (e) {
+          avatar = _genderEmojiMarker(gender);
+        }
       }
-      return Image.memory(
-        base64Decode(base64Str),
-        fit: BoxFit.cover,
-        errorBuilder: (ctx, err, stack) => _genderEmojiContainer(gender),
-      );
-    } catch (e) {
-      return _genderEmojiContainer(gender);
+    } else {
+      avatar = _genderEmojiMarker(gender);
     }
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Outer glow ring
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppTheme.primary.withValues(alpha: 0.15),
+            border: Border.all(color: AppTheme.primary, width: 2.5),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primary.withValues(alpha: 0.3),
+                blurRadius: 10,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Center(child: avatar),
+        ),
+      ],
+    );
   }
 
-  Widget _genderEmojiContainer(String gender) {
-    String emoji = '👤';
-    Color bg = Colors.grey[200]!;
-    if (gender.toLowerCase() == 'male') {
-      emoji = '👦';
-      bg = Colors.blue[50]!;
-    } else if (gender.toLowerCase() == 'female') {
-      emoji = '👧';
-      bg = Colors.pink[50]!;
-    }
-    return Container(
-      color: bg,
-      alignment: Alignment.center,
-      child: Text(
-        emoji,
-        style: const TextStyle(fontSize: 20),
-      ),
-    );
+  Widget _genderEmojiMarker(String gender) {
+    String emoji = '😊';
+    if (gender.toLowerCase() == 'male') emoji = '👦';
+    if (gender.toLowerCase() == 'female') emoji = '👧';
+    return Text(emoji, style: const TextStyle(fontSize: 26));
   }
 
   // ─── STICKY NOTES ────────────────────────────────────────────────────────
@@ -1374,7 +1411,6 @@ class _DashboardPageState extends State<DashboardPage> {
                   const Text(
                     "Sticky Notes",
                     style: TextStyle(
-                      fontFamily: 'Outfit',
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textDark,
@@ -1406,7 +1442,7 @@ class _DashboardPageState extends State<DashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                  child: _buildStickyNote(
+                  child: EditableStickyNote(
                     name: myName,
                     content: myNote,
                     color: const Color(0xFFFEF7CD), // warm yellow paper
@@ -1418,7 +1454,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildStickyNote(
+                  child: EditableStickyNote(
                     name: partnerName,
                     content: partnerNote,
                     color: const Color(0xFFDDF1FF), // soft sky blue paper
@@ -1443,11 +1479,11 @@ class _DashboardPageState extends State<DashboardPage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
           'Clear Note?',
-          style: TextStyle(fontFamily: 'Outfit', fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         content: Text(
           'Are you sure you want to clear your note for $partnerName?',
-          style: const TextStyle(fontFamily: 'Inter'),
+          style: const TextStyle(),
         ),
         actions: [
           TextButton(
@@ -1466,141 +1502,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildStickyNote({
-    required String name,
-    required String content,
-    required Color color,
-    required Color lineColor,
-    required Color nameColor,
-    required bool isEditable,
-    required Function(String)? onSave,
-  }) {
-    final controller = TextEditingController(text: content);
-    // Move cursor to end of text
-    controller.selection = TextSelection.fromPosition(TextPosition(offset: controller.text.length));
 
-    // 5 ruled lines at fixed spacing
-    const double lineSpacing = 22.0;
-    const int lineCount = 5;
-    const double topPad = 14.0;
-    const double headerH = 26.0; // pin + name row height
-
-    return Container(
-      constraints: const BoxConstraints(minHeight: 160),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
-          children: [
-            // ── Ruled lines (drawn behind everything) ──
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _RuledLinePainter(
-                  lineColor: lineColor,
-                  lineSpacing: lineSpacing,
-                  topOffset: topPad + headerH + 6,
-                  lineCount: lineCount,
-                ),
-              ),
-            ),
-
-            // ── Content ──
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Pin + Name header
-                  Row(
-                    children: [
-                      Icon(Icons.push_pin_rounded, size: 13, color: nameColor.withOpacity(0.7)),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          name,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontFamily: 'Outfit',
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                            color: nameColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-
-                  // Note body — editable or read-only
-                  SizedBox(
-                    height: lineSpacing * lineCount,
-                    child: isEditable
-                        ? TextField(
-                            controller: controller,
-                            maxLines: null,
-                            expands: true,
-                            textAlignVertical: TextAlignVertical.top,
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 13,
-                              color: Color(0xFF333333),
-                              height: 1.69, // matches lineSpacing / fontSize
-                              leadingDistribution: TextLeadingDistribution.even,
-                            ),
-                            decoration: const InputDecoration(
-                              hintText: 'Write a note...',
-                              hintStyle: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 13,
-                                color: Color(0xFFBBAA66),
-                                height: 1.69,
-                              ),
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: EdgeInsets.zero,
-                              fillColor: Colors.transparent,
-                              filled: true,
-                            ),
-                            onTapOutside: (_) {
-                              FocusScope.of(context).unfocus();
-                              onSave?.call(controller.text);
-                            },
-                          )
-                        : SizedBox(
-                            width: double.infinity,
-                            child: content.isEmpty
-                                ? const SizedBox.shrink()
-                                : SingleChildScrollView(
-                                    child: Text(
-                                      content,
-                                      style: const TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 13,
-                                        color: Color(0xFF333333),
-                                        height: 1.69,
-                                      ),
-                                    ),
-                                  ),
-                          ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   String _formatLocationTime(DateTime time) {
     final diff = DateTime.now().difference(time);
