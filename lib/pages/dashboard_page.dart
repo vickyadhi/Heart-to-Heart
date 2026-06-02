@@ -1448,8 +1448,10 @@ class _DashboardPageState extends State<DashboardPage> {
                     color: const Color(0xFFFEF7CD), // warm yellow paper
                     lineColor: const Color(0xFFE8D87A),
                     nameColor: const Color(0xFFA07800),
-                    isEditable: false, // I cannot edit my own note (my partner edits it)
-                    onSave: null,
+                    isEditable: true, // I write my own note for partner to see
+                    onSave: (text) => auth.updateStickyNote(text),
+                    onTyping: () => conn.onUserTypingNote(),
+                    onStopTyping: () => conn.onUserStoppedTypingNote(),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1460,8 +1462,9 @@ class _DashboardPageState extends State<DashboardPage> {
                     color: const Color(0xFFDDF1FF), // soft sky blue paper
                     lineColor: const Color(0xFF9DD4F0),
                     nameColor: const Color(0xFF0070A8),
-                    isEditable: true, // I can edit my partner's note
-                    onSave: (text) => conn.updatePartnerStickyNote(text),
+                    isEditable: false, // partner's note to me (read-only for me)
+                    isTypingHint: conn.partnerIsTyping,
+                    onSave: null,
                   ),
                 ),
               ],
@@ -1473,6 +1476,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void _confirmClearNote(BuildContext context, ConnectionService conn, String partnerName) {
+    final auth = Provider.of<AuthService>(context, listen: false);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1481,9 +1485,9 @@ class _DashboardPageState extends State<DashboardPage> {
           'Clear Note?',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        content: Text(
-          'Are you sure you want to clear your note for $partnerName?',
-          style: const TextStyle(),
+        content: const Text(
+          'Are you sure you want to clear your note?',
+          style: TextStyle(),
         ),
         actions: [
           TextButton(
@@ -1492,7 +1496,8 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           TextButton(
             onPressed: () {
-              conn.updatePartnerStickyNote('');
+              auth.updateStickyNote('');
+              conn.onUserStoppedTypingNote();
               Navigator.pop(ctx);
             },
             child: const Text('Clear', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),

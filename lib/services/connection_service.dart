@@ -28,6 +28,7 @@ class ConnectionService extends ChangeNotifier {
   String? _generatedCode;
   String? _requesterUid;
   String? _requesterName;
+  String? _initializedUid;
 
   final _battery = Battery();
   StreamSubscription<BatteryState>? _batterySubscription;
@@ -51,6 +52,8 @@ class ConnectionService extends ChangeNotifier {
   DateTime? _partnerLocationUpdatedAt;
   String? _partnerGender;
   String? _partnerStickyNote;
+  bool _partnerIsTyping = false;
+  String? _lastSeenEventId;
 
   StreamSubscription<QuerySnapshot>? _eventsSubscription;
   StreamSubscription<DocumentSnapshot>? _userSubscription;
@@ -78,6 +81,7 @@ class ConnectionService extends ChangeNotifier {
   DateTime? get partnerLocationUpdatedAt => _partnerLocationUpdatedAt;
   String? get partnerGender => _partnerGender;
   String? get partnerStickyNote => _partnerStickyNote;
+  bool get partnerIsTyping => _partnerIsTyping;
 
   ConnectionService(this._authService) {
     _authService.addListener(_onAuthChanged);
@@ -128,11 +132,16 @@ class ConnectionService extends ChangeNotifier {
 
   void _onAuthChanged() {
     if (_authService.isAuthenticated) {
-      _subscribeToUserDoc();
-      setupPushNotifications();
-      _startBatteryTracking();
-      startLocationTracking();
+      final currentUid = _authService.currentUser?.uid;
+      if (_initializedUid != currentUid) {
+        _initializedUid = currentUid;
+        _subscribeToUserDoc();
+        setupPushNotifications();
+        _startBatteryTracking();
+        startLocationTracking();
+      }
     } else {
+      _initializedUid = null;
       _eventsSubscription?.cancel();
       _userSubscription?.cancel();
       _codeSubscription?.cancel();
@@ -327,6 +336,7 @@ class ConnectionService extends ChangeNotifier {
   // Subscribe to real-time Firestore events
   void _subscribeToEvents() {
     _eventsSubscription?.cancel();
+    _lastSeenEventId = null; // Reset so we seed correctly from first snapshot
 
     final myId = _authService.currentUser!.uid;
     final partnerId = _authService.currentUser!.partnerUid!;
@@ -344,16 +354,23 @@ class ConnectionService extends ChangeNotifier {
               .map((doc) => LoveEvent.fromMap(doc.data()))
               .toList();
 
-          // Detect new incoming events to trigger vibrations/banners
-          if (_events.isNotEmpty && newEvents.isNotEmpty) {
+          // Detect new incoming events — use _lastSeenEventId so the very first
+          // event after pairing is always caught (fixes post-pair reaction/notification)
+          if (newEvents.isNotEmpty) {
             final latestEvent = newEvents.first;
-            if (latestEvent.senderId == partnerId && !_containsEvent(latestEvent.id)) {
+            if (latestEvent.senderId == partnerId &&
+                latestEvent.id != _lastSeenEventId) {
+              _lastSeenEventId = latestEvent.id;
               onIncomingLoveEvent?.call(latestEvent);
               _authService.incrementLoveReceived();
               // Instantly mark partner as online
               _partnerIsOnline = true;
-              notifyListeners();
             }
+          }
+
+          // Seed _lastSeenEventId on first load so we don't re-fire old events
+          if (_lastSeenEventId == null && newEvents.isNotEmpty) {
+            _lastSeenEventId = newEvents.first.id;
           }
 
           _events = newEvents;
@@ -397,6 +414,7 @@ class ConnectionService extends ChangeNotifier {
             : null;
         _partnerGender = data['gender'] as String?;
         _partnerStickyNote = data['stickyNote'] as String?;
+        _partnerIsTyping = data['isTyping'] as bool? ?? false;
         notifyListeners();
         
         // Trigger widget update so partner's status changes are reflected!
@@ -771,7 +789,10 @@ class ConnectionService extends ChangeNotifier {
 
   Future<void> updateHomeScreenWidget(String partnerName, String statusMessage) async {
     try {
-      final receivedNote = _authService.currentUser?.stickyNote ?? '';
+      // Show partner's note to me in the widget (the note they wrote for me to read)
+      final receivedNote = _partnerStickyNote?.isNotEmpty == true
+          ? _partnerStickyNote!
+          : '';
       await HomeWidget.saveWidgetData<String>('partner_name', partnerName);
       await HomeWidget.saveWidgetData<String>('status_message', statusMessage);
       await HomeWidget.saveWidgetData<String>('received_note', receivedNote);
@@ -910,20 +931,46 @@ class ConnectionService extends ChangeNotifier {
     }
   }
 
-  // Update partner's sticky note text
-  Future<void> updatePartnerStickyNote(String note) async {
-    final partnerId = _authService.currentUser?.partnerUid;
-    if (partnerId == null || partnerId.isEmpty) return;
+  // Update MY OWN sticky note — this is the note my partner will read
+  Future<void> updateMyStickyNote(String note) async {
+    final myUid = _authService.currentUser?.uid;
+    if (myUid == null) return;
     try {
-      await _firestore.collection('users').doc(partnerId).update({
+      await _firestore.collection('users').doc(myUid).update({
         'stickyNote': note,
       });
-      _partnerStickyNote = note;
-      notifyListeners();
-      print('💚 [h2h] Partner sticky note updated.');
+      _authService.currentUser?.copyWith(stickyNote: note);
+      print('💚 [h2h] My sticky note saved to Firestore.');
     } catch (e) {
-      print('🧡 [h2h] updatePartnerStickyNote error: $e');
+      print('🧡 [h2h] updateMyStickyNote error: $e');
     }
+  }
+
+  // Typing indicator — sets isTyping on my own user doc so partner can see
+  Timer? _typingTimer;
+  Future<void> updateMyTypingStatus(bool isTyping) async {
+    final myUid = _authService.currentUser?.uid;
+    if (myUid == null) return;
+    try {
+      await _firestore.collection('users').doc(myUid).update({'isTyping': isTyping});
+    } catch (e) {
+      debugPrint('🧡 [h2h] updateMyTypingStatus error: $e');
+    }
+  }
+
+  // Call this when user is actively typing — auto-clears after 3 seconds of inactivity
+  void onUserTypingNote() {
+    _typingTimer?.cancel();
+    updateMyTypingStatus(true);
+    _typingTimer = Timer(const Duration(seconds: 3), () {
+      updateMyTypingStatus(false);
+    });
+  }
+
+  // Call this when user stops typing (save action, unfocus)
+  void onUserStoppedTypingNote() {
+    _typingTimer?.cancel();
+    updateMyTypingStatus(false);
   }
 }
 

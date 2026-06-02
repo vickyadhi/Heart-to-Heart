@@ -113,7 +113,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     return ClipRRect(
       borderRadius: BorderRadius.circular(26),
       child: Image.asset(
-        'assets/images/app_logo_flat.png',
+        'assets/images/h2h_icon.png',
         width: 110,
         height: 110,
         fit: BoxFit.cover,

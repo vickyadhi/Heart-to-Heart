@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetLaunchIntent
+import es.antonborri.home_widget.HomeWidgetBackgroundIntent
 import android.net.Uri
 
 class LoveWidgetProvider : AppWidgetProvider() {
@@ -32,7 +33,7 @@ class LoveWidgetProvider : AppWidgetProvider() {
             views.setTextViewText(R.id.widget_status, statusMessage)
             views.setTextViewText(R.id.widget_note_text, receivedNote)
 
-            // 1. Core Heart tap — opens app
+            // 1. Core Heart tap — opens app (intentional: big heart opens full app)
             val heartIntent = HomeWidgetLaunchIntent.getActivity(
                 context,
                 MainActivity::class.java,
@@ -40,34 +41,30 @@ class LoveWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.widget_main_heart, heartIntent)
 
-            // 2. Miss You emoji tap — triggers backgroundCallback which sends event to partner
-            val missYouIntent = HomeWidgetLaunchIntent.getActivity(
+            // 2. Miss You emoji tap — sends in BACKGROUND without opening the app
+            val missYouIntent = HomeWidgetBackgroundIntent.getBroadcast(
                 context,
-                MainActivity::class.java,
                 Uri.parse("homewidget://send_love?type=miss_you")
             )
             views.setOnClickPendingIntent(R.id.widget_emoji_miss_you, missYouIntent)
 
-            // 3. Sad emoji tap
-            val sadIntent = HomeWidgetLaunchIntent.getActivity(
+            // 3. Sad emoji tap — background send
+            val sadIntent = HomeWidgetBackgroundIntent.getBroadcast(
                 context,
-                MainActivity::class.java,
                 Uri.parse("homewidget://send_love?type=sad")
             )
             views.setOnClickPendingIntent(R.id.widget_emoji_sad, sadIntent)
 
-            // 4. Excited emoji tap
-            val excitedIntent = HomeWidgetLaunchIntent.getActivity(
+            // 4. Excited emoji tap — background send
+            val excitedIntent = HomeWidgetBackgroundIntent.getBroadcast(
                 context,
-                MainActivity::class.java,
                 Uri.parse("homewidget://send_love?type=excited")
             )
             views.setOnClickPendingIntent(R.id.widget_emoji_excited, excitedIntent)
 
-            // 5. Thinking emoji tap
-            val thinkingIntent = HomeWidgetLaunchIntent.getActivity(
+            // 5. Thinking emoji tap — background send
+            val thinkingIntent = HomeWidgetBackgroundIntent.getBroadcast(
                 context,
-                MainActivity::class.java,
                 Uri.parse("homewidget://send_love?type=thinking")
             )
             views.setOnClickPendingIntent(R.id.widget_emoji_thinking, thinkingIntent)

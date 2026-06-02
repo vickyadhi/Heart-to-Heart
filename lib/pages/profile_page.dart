@@ -267,11 +267,11 @@ class _ProfilePageState extends State<ProfilePage> {
     final myAvatarUrl = user?.photoUrl;
     final streak = user?.streakCount ?? 127;
 
-    // Anniversary calculations
-    final anniversary = user?.anniversaryDate;
-    int totalDaysOfLove = 8; // Default mockup days matching Katija screenshot if anniversary null
-    if (anniversary != null) {
-      totalDaysOfLove = DateTime.now().difference(anniversary).inDays;
+    // Connected Days based on actual pairing date (connectedAt), not anniversary
+    final connectedAt = user?.connectedAt;
+    int totalDaysOfLove = 0;
+    if (connectedAt != null) {
+      totalDaysOfLove = DateTime.now().difference(connectedAt).inDays;
     }
 
     return SafeArea(

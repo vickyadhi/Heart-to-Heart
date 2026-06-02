@@ -39,6 +39,7 @@ exports.sendLoveNotification = functions.firestore
       if (eventType === 'sad') emojiIcon = '😢';
       if (eventType === 'excited') emojiIcon = '🤩';
       if (eventType === 'thinking') emojiIcon = '💭';
+      if (eventType === 'love_draw') emojiIcon = '🎨';
 
       const payload = {
         token: fcmToken,

@@ -10,6 +10,9 @@ class EditableStickyNote extends StatefulWidget {
   final Color nameColor;
   final bool isEditable;
   final Function(String)? onSave;
+  final VoidCallback? onTyping;     // called while actively typing
+  final VoidCallback? onStopTyping; // called when typing stops / unfocused
+  final bool isTypingHint;          // shows "✏️ typing..." on read-only side
 
   const EditableStickyNote({
     super.key,
@@ -20,6 +23,9 @@ class EditableStickyNote extends StatefulWidget {
     required this.nameColor,
     required this.isEditable,
     this.onSave,
+    this.onTyping,
+    this.onStopTyping,
+    this.isTypingHint = false,
   });
 
   @override
@@ -57,9 +63,11 @@ class _EditableStickyNoteState extends State<EditableStickyNote> {
   }
 
   void _onChanged(String text) {
+    widget.onTyping?.call();
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(seconds: 1), () {
       widget.onSave?.call(text);
+      widget.onStopTyping?.call();
     });
   }
 
@@ -115,21 +123,42 @@ class _EditableStickyNoteState extends State<EditableStickyNote> {
                         Icon(Icons.push_pin_rounded, size: 13, color: widget.nameColor.withOpacity(0.7)),
                         const SizedBox(width: 4),
                         Expanded(
-                          child: Text(
-                            widget.name,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.quicksand(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: widget.nameColor,
-                            ),
-                          ),
+                          child: widget.isTypingHint
+                              ? Row(
+                                  children: [
+                                    Text(
+                                      widget.name,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.quicksand(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                        color: widget.nameColor,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '✏️ typing…',
+                                      style: GoogleFonts.quicksand(
+                                        fontSize: 10,
+                                        color: widget.nameColor.withOpacity(0.7),
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Text(
+                                  widget.name,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.quicksand(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    color: widget.nameColor,
+                                  ),
+                                ),
                         ),
                       ],
                     ),
                   ),
-
-                  // Note body
                   SizedBox(
                     height: lineSpacing * lineCount,
                     child: widget.isEditable
@@ -165,6 +194,7 @@ class _EditableStickyNoteState extends State<EditableStickyNote> {
                             onTapOutside: (_) {
                               FocusScope.of(context).unfocus();
                               widget.onSave?.call(_controller.text);
+                              widget.onStopTyping?.call();
                             },
                           )
                         : SizedBox(

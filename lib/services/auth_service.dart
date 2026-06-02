@@ -37,10 +37,16 @@ class AuthService extends ChangeNotifier {
         heartsCount: 0,
         isOnline: true,
       );
-      refreshUser(fbUser.uid).then((_) {
+      refreshUser(fbUser.uid).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          debugPrint('[AuthService] refreshUser timed out on startup — proceeding anyway');
+        },
+      ).then((_) {
         _isInitialized = true;
         notifyListeners();
       }).catchError((e) {
+        debugPrint('[AuthService] refreshUser error on startup: $e');
         _isInitialized = true;
         notifyListeners();
       });
@@ -108,14 +114,28 @@ class AuthService extends ChangeNotifier {
   // Refresh user data from Firestore
   Future<void> refreshUser(String uid) async {
     try {
-      final doc = await _firestore.collection('users').doc(uid).get();
+      final doc = await _firestore
+          .collection('users')
+          .doc(uid)
+          .get()
+          .timeout(const Duration(seconds: 8));
       if (doc.exists) {
         final data = doc.data()!;
-        await _firestore.collection('users').doc(uid).update({'isOnline': true});
+        // Fire-and-forget online status update — don't await so it can't block
+        _firestore
+            .collection('users')
+            .doc(uid)
+            .update({'isOnline': true})
+            .catchError((e) => debugPrint('isOnline update error: $e'));
         data['isOnline'] = true;
         if (data['pairingCode'] == null || (data['pairingCode'] as String).isEmpty) {
-          final pairingCode = await _generateUniquePairingCode();
-          await _firestore.collection('users').doc(uid).update({'pairingCode': pairingCode});
+          final pairingCode = await _generateUniquePairingCode()
+              .timeout(const Duration(seconds: 8));
+          _firestore
+              .collection('users')
+              .doc(uid)
+              .update({'pairingCode': pairingCode})
+              .catchError((e) => debugPrint('pairingCode update error: $e'));
           data['pairingCode'] = pairingCode;
         }
         _currentUser = UserProfile.fromMap(data);
@@ -124,7 +144,8 @@ class AuthService extends ChangeNotifier {
         // Profile not found — create a minimal one from Firebase Auth
         final fbUser = _firebaseAuth.currentUser;
         if (fbUser != null) {
-          final pairingCode = await _generateUniquePairingCode();
+          final pairingCode = await _generateUniquePairingCode()
+              .timeout(const Duration(seconds: 8));
           final newProfile = UserProfile(
             uid: fbUser.uid,
             displayName: fbUser.displayName ?? fbUser.email?.split('@').first ?? 'User',
@@ -137,13 +158,18 @@ class AuthService extends ChangeNotifier {
             heartsCount: 0,
             isOnline: true,
           );
-          await _firestore.collection('users').doc(uid).set(newProfile.toMap());
+          // Fire-and-forget profile creation
+          _firestore
+              .collection('users')
+              .doc(uid)
+              .set(newProfile.toMap())
+              .catchError((e) => debugPrint('profile creation error: $e'));
           _currentUser = newProfile;
           notifyListeners();
         }
       }
     } catch (e) {
-      print('Error refreshing user: $e');
+      debugPrint('Error refreshing user: $e');
     }
   }
 

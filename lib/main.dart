@@ -7,6 +7,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/auth_io.dart' as gauth;
 import 'dart:convert';
+import 'dart:async';
 import 'services/firebase_service.dart';
 import 'services/auth_service.dart';
 import 'services/connection_service.dart';
@@ -70,16 +71,85 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  StreamSubscription<Uri?>? _widgetSubscription;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _setupHomeWidgetListener();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _widgetSubscription?.cancel();
     super.dispose();
+  }
+
+  void _setupHomeWidgetListener() {
+    // 1. Handle launched URI on cold start
+    HomeWidget.initiallyLaunchedFromHomeWidget().then((uri) {
+      if (uri != null) {
+        _handleWidgetUri(uri);
+      }
+    });
+
+    // 2. Handle launched URI when app is already in memory
+    _widgetSubscription = HomeWidget.widgetClicked.listen((uri) {
+      if (uri != null) {
+        _handleWidgetUri(uri);
+      }
+    });
+  }
+
+  void _handleWidgetUri(Uri uri) {
+    if (uri.scheme == 'homewidget' && uri.host == 'send_love') {
+      final type = uri.queryParameters['type'];
+      if (type != null) {
+        // Wait a short moment to ensure services are fully loaded
+        Future.delayed(const Duration(milliseconds: 600), () async {
+          if (!mounted) return;
+          final conn = Provider.of<ConnectionService>(context, listen: false);
+          final auth = Provider.of<AuthService>(context, listen: false);
+          
+          if (auth.isAuthenticated && auth.isPaired) {
+            try {
+              await conn.sendLoveEvent(type);
+              if (mounted) {
+                String label = 'Love';
+                if (type == 'miss_you') label = 'Miss You';
+                if (type == 'sad') label = 'Sad';
+                if (type == 'excited') label = 'Excited';
+                if (type == 'thinking') label = 'Thinking';
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        const Icon(Icons.check_circle_outline_rounded, color: Colors.white),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Sent "$label" to partner from widget! ❤️',
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                    backgroundColor: const Color(0xFFE91E63), // Pink color matching theme
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                );
+              }
+            } catch (e) {
+              print('Error sending love event from widget tap: $e');
+            }
+          }
+        });
+      }
+    }
   }
 
   @override
