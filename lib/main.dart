@@ -17,7 +17,7 @@ import 'theme.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
-    await FirebaseService.initialize();
+    await FirebaseService.initialize(isBackground: true);
     print("💚 [h2h] FCM Background message: ${message.messageId}");
   } catch (e) {
     print("🧡 [h2h] FCM Background message initialization failed: $e");
@@ -140,6 +140,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                     backgroundColor: const Color(0xFFE91E63), // Pink color matching theme
                     behavior: SnackBarBehavior.floating,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    duration: const Duration(seconds: 3),
                   ),
                 );
               }
@@ -186,9 +187,17 @@ Future<void> backgroundCallback(Uri? uri) async {
     final type = uri.queryParameters['type'];
     if (type != null) {
       try {
-        await FirebaseService.initialize();
+        await FirebaseService.initialize(isBackground: true);
         final auth = firebase_auth.FirebaseAuth.instance;
-        final user = auth.currentUser;
+        firebase_auth.User? user = auth.currentUser;
+        if (user == null) {
+          print("💚 [h2h] Background callback: currentUser is null. Waiting for auth state to restore...");
+          try {
+            user = await auth.authStateChanges().firstWhere((u) => u != null).timeout(const Duration(seconds: 2));
+          } catch (_) {
+            print("🧡 [h2h] Background callback: Auth state restore timed out.");
+          }
+        }
         if (user != null) {
           final myUid = user.uid;
           final userDoc = await FirebaseFirestore.instance.collection('users').doc(myUid).get();
@@ -247,6 +256,7 @@ Future<void> backgroundCallback(Uri? uri) async {
                 final fcmConfigDoc = await FirebaseFirestore.instance.collection('config').doc('fcm').get();
                 final serviceAccountJson = fcmConfigDoc.data()?['serviceAccount'] as String?;
                 if (serviceAccountJson != null && serviceAccountJson.isNotEmpty) {
+                  final soundEnabled = partnerDoc.data()?['soundEnabled'] as bool? ?? true;
                   await _sendFcmV1NotificationBackground(
                     serviceAccountJson: serviceAccountJson,
                     token: partnerToken,
@@ -254,6 +264,7 @@ Future<void> backgroundCallback(Uri? uri) async {
                     body: defaultMsg,
                     type: type,
                     senderId: myUid,
+                    soundEnabled: soundEnabled,
                   );
                 }
               } catch (fcmErr) {
@@ -276,6 +287,7 @@ Future<void> _sendFcmV1NotificationBackground({
   required String body,
   required String type,
   required String senderId,
+  required bool soundEnabled,
 }) async {
   try {
     // 1. Parse the service account JSON
@@ -313,14 +325,16 @@ Future<void> _sendFcmV1NotificationBackground({
         'android': {
           'priority': 'high',
           'notification': {
-            'channel_id': 'high_importance_channel',
-            'sound': 'default',
+            'channel_id': soundEnabled ? 'high_importance_channel' : 'silent_importance_channel',
+            if (soundEnabled) 'sound': 'default',
             'icon': 'ic_notification',
           },
         },
         'apns': {
           'payload': {
-            'aps': {'sound': 'default'},
+            'aps': {
+              if (soundEnabled) 'sound': 'default',
+            },
           },
         },
         'data': {

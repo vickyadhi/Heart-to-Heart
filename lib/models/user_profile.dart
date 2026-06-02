@@ -40,6 +40,7 @@ class UserProfile {
   // Sticky notes — each user can write a note for both to see
   final String? stickyNote;
   final int emojisSentCount;
+  final int gameScore;
 
   UserProfile({
     required this.uid,
@@ -76,6 +77,7 @@ class UserProfile {
     this.setupComplete = false,
     this.stickyNote,
     this.emojisSentCount = 0,
+    this.gameScore = 0,
   });
 
   UserProfile copyWith({
@@ -113,6 +115,7 @@ class UserProfile {
     bool? setupComplete,
     String? stickyNote,
     int? emojisSentCount,
+    int? gameScore,
   }) {
     return UserProfile(
       uid: uid ?? this.uid,
@@ -149,6 +152,7 @@ class UserProfile {
       setupComplete: setupComplete ?? this.setupComplete,
       stickyNote: stickyNote ?? this.stickyNote,
       emojisSentCount: emojisSentCount ?? this.emojisSentCount,
+      gameScore: gameScore ?? this.gameScore,
     );
   }
 
@@ -188,6 +192,7 @@ class UserProfile {
       setupComplete: setupComplete,
       stickyNote: stickyNote,
       emojisSentCount: emojisSentCount,
+      gameScore: gameScore,
     );
   }
 
@@ -227,6 +232,7 @@ class UserProfile {
       'setupComplete': setupComplete,
       'stickyNote': stickyNote,
       'emojisSentCount': emojisSentCount,
+      'gameScore': gameScore,
     };
   }
 
@@ -266,6 +272,7 @@ class UserProfile {
       setupComplete: map['setupComplete'] ?? false,
       stickyNote: map['stickyNote'],
       emojisSentCount: map['emojisSentCount'] ?? 0,
+      gameScore: map['gameScore'] ?? 0,
     );
   }
 }

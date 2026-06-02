@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_background"
+    android:padding="12dp"
+    android:gravity="center">
+
+    <!-- Partner Name -->
+    <TextView
+        android:id="@+id/widget_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Partner"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="10dp"
+        android:gravity="center"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-medium" />
+
+    <!-- Big Tappable Heart (Sends Love Tap directly in background!) -->
+    <TextView
+        android:id="@+id/widget_main_heart"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:text="❤️"
+        android:textSize="32sp"
+        android:gravity="center"
+        android:background="@drawable/widget_emoji_bg" />
+
+    <!-- Tiny Brand tag at the bottom -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="h2h"
+        android:textColor="#80FFFFFF"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-medium" />
+</LinearLayout>

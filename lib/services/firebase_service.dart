@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,15 +10,19 @@ class FirebaseService {
 
   static bool get isSandbox => _isSandbox;
 
-  static Future<void> initialize() async {
+  static Future<void> initialize({bool isBackground = false}) async {
     try {
-      WidgetsFlutterBinding.ensureInitialized();
+      if (isBackground) {
+        DartPluginRegistrant.ensureInitialized();
+      } else {
+        WidgetsFlutterBinding.ensureInitialized();
+      }
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
       _isSandbox = false;
       if (kDebugMode) {
-        print('❤️ [h2h] Firebase Initialized Successfully! Running in Production Mode.');
+        print('❤️ [h2h] Firebase Initialized Successfully! Running in ${isBackground ? 'Background' : 'Production'} Mode.');
       }
     } catch (e) {
       // If Firebase fails, still keep sandbox OFF so errors surface cleanly

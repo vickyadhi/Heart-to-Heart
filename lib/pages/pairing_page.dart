@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:home_widget/home_widget.dart';
 import '../services/connection_service.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
@@ -39,20 +40,35 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
   void didChangeDependencies() {
     super.didChangeDependencies();
     final auth = Provider.of<AuthService>(context);
-    if (auth.isPaired && !_hasNavigated) {
+    if (!auth.isAuthenticated) {
       _hasNavigated = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+            (route) => false,
+          );
+        }
+      });
+      return;
+    }
+    
+    // Check if we came from an unpair event
+    if (auth.lastUnpairedPartnerName != null) {
+      final name = auth.lastUnpairedPartnerName;
+      auth.clearLastUnpairedPartnerName();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Row(
+              content: Row(
                 children: [
-                  Icon(Icons.check_circle_outline_rounded, color: Colors.white),
-                  SizedBox(width: 12),
+                  const Icon(Icons.info_outline_rounded, color: Colors.white),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Successfully connected with partner!',
-                      style: TextStyle(
+                      'Unpaired with $name',
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -60,17 +76,51 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                   ),
                 ],
               ),
-              backgroundColor: const Color(0xFF2E7D32),
+              backgroundColor: AppTheme.primary,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              duration: const Duration(seconds: 4),
+              duration: const Duration(seconds: 3), // 3 seconds only
             ),
           );
-          
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const InfoPage()),
-          );
+        }
+      });
+    }
+
+    if (auth.isPaired && !_hasNavigated) {
+      _hasNavigated = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (mounted) {
+          await HomeWidget.saveWidgetData<bool>('pairing_confirmed', true);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Row(
+                  children: [
+                    Icon(Icons.check_circle_outline_rounded, color: Colors.white),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Successfully connected with partner!',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: const Color(0xFF2E7D32),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                duration: const Duration(seconds: 3), // 3 seconds only
+              ),
+            );
+            
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const InfoPage()),
+            );
+          }
         }
       });
     }
@@ -206,7 +256,11 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
                           } catch (e) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Connection failed: $e')),
+                                SnackBar(
+                                  content: Text('Connection failed: $e'),
+                                  behavior: SnackBarBehavior.floating,
+                                  duration: const Duration(seconds: 3),
+                                ),
                               );
                             }
                           }

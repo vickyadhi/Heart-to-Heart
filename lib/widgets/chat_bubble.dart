@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/love_event.dart';
 
@@ -152,6 +153,23 @@ class ChatBubble extends StatelessWidget {
     );
   }
 
+  ImageProvider? _getAvatarProvider(String? photoUrl) {
+    if (photoUrl == null || photoUrl.isEmpty) return null;
+    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+      return NetworkImage(photoUrl);
+    }
+    try {
+      String base64Str = photoUrl;
+      if (photoUrl.contains(',')) {
+        base64Str = photoUrl.split(',').last;
+      }
+      return MemoryImage(base64Decode(base64Str));
+    } catch (e) {
+      print('Error decoding avatar Base64 in ChatBubble: $e');
+      return null;
+    }
+  }
+
   Widget _buildAvatar(String? photoUrl, String initial) {
     return Container(
       width: 32,
@@ -170,7 +188,7 @@ class ChatBubble extends StatelessWidget {
       child: CircleAvatar(
         radius: 16,
         backgroundColor: const Color(0xFFFFEAEE),
-        backgroundImage: photoUrl != null && photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+        backgroundImage: _getAvatarProvider(photoUrl),
         child: photoUrl == null || photoUrl.isEmpty
             ? Text(
                 initial.toUpperCase(),

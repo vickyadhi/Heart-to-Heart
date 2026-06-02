@@ -38,6 +38,7 @@ class ConnectionService extends ChangeNotifier {
   int? _partnerBatteryLevel;
   bool _partnerIsCharging = false;
   String? _partnerPhotoUrl;
+  String? _partnerDisplayName;
   
   // Partner's real-time statuses synced from Firestore
   String? _partnerCustomStatus;
@@ -50,9 +51,12 @@ class ConnectionService extends ChangeNotifier {
   double? _partnerLatitude;
   double? _partnerLongitude;
   DateTime? _partnerLocationUpdatedAt;
+  double? _myLatitude;
+  double? _myLongitude;
   String? _partnerGender;
   String? _partnerStickyNote;
   bool _partnerIsTyping = false;
+  int? _partnerGameScore;
   String? _lastSeenEventId;
 
   StreamSubscription<QuerySnapshot>? _eventsSubscription;
@@ -79,9 +83,13 @@ class ConnectionService extends ChangeNotifier {
   double? get partnerLatitude => _partnerLatitude;
   double? get partnerLongitude => _partnerLongitude;
   DateTime? get partnerLocationUpdatedAt => _partnerLocationUpdatedAt;
+  double? get myLatitude => _myLatitude;
+  double? get myLongitude => _myLongitude;
   String? get partnerGender => _partnerGender;
   String? get partnerStickyNote => _partnerStickyNote;
   bool get partnerIsTyping => _partnerIsTyping;
+  int get partnerGameScore => _partnerGameScore ?? 0;
+  String? get partnerDisplayName => _authService.currentUser?.partnerNickname ?? _partnerDisplayName ?? _authService.currentUser?.partnerName;
 
   ConnectionService(this._authService) {
     _authService.addListener(_onAuthChanged);
@@ -123,7 +131,10 @@ class ConnectionService extends ChangeNotifier {
       }
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         print('💚 [h2h] Foreground push: ${message.notification?.title}');
-        HapticFeedback.vibrate(); // Vibrate the device immediately on receiving a foreground message
+        final user = _authService.currentUser;
+        if (user != null && (user.vibrationEnabled ?? true)) {
+          HapticFeedback.vibrate(); // Vibrate the device immediately on receiving a foreground message if enabled
+        }
       });
     } catch (e) {
       print('🧡 [h2h] FCM setup error: $e');
@@ -135,10 +146,12 @@ class ConnectionService extends ChangeNotifier {
       final currentUid = _authService.currentUser?.uid;
       if (_initializedUid != currentUid) {
         _initializedUid = currentUid;
-        _subscribeToUserDoc();
-        setupPushNotifications();
-        _startBatteryTracking();
-        startLocationTracking();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _subscribeToUserDoc();
+          setupPushNotifications();
+          _startBatteryTracking();
+          startLocationTracking();
+        });
       }
     } else {
       _initializedUid = null;
@@ -206,9 +219,13 @@ class ConnectionService extends ChangeNotifier {
       try {
         Position? initialPos = await Geolocator.getLastKnownPosition();
         initialPos ??= await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 5),
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.medium,
+            timeLimit: Duration(seconds: 8),
+          ),
         );
+        _myLatitude = initialPos.latitude;
+        _myLongitude = initialPos.longitude;
         if (_authService.currentUser != null) {
           final myUid = _authService.currentUser!.uid;
           await _firestore.collection('users').doc(myUid).update({
@@ -218,6 +235,7 @@ class ConnectionService extends ChangeNotifier {
           });
           print('💚 [h2h] Synced initial location: ${initialPos.latitude}, ${initialPos.longitude}');
         }
+        notifyListeners();
       } catch (e) {
         print('🧡 [h2h] Failed to fetch initial location: $e');
       }
@@ -229,6 +247,8 @@ class ConnectionService extends ChangeNotifier {
           distanceFilter: 15, // Update only if user moves 15 meters
         ),
       ).listen((Position position) async {
+        _myLatitude = position.latitude;
+        _myLongitude = position.longitude;
         if (_authService.currentUser != null) {
           final myUid = _authService.currentUser!.uid;
           await _firestore.collection('users').doc(myUid).update({
@@ -237,6 +257,7 @@ class ConnectionService extends ChangeNotifier {
             'locationUpdatedAt': DateTime.now().toIso8601String(),
           });
         }
+        notifyListeners();
       }, onError: (e) {
         print('🧡 [h2h] Geolocation stream error: $e');
       });
@@ -252,6 +273,8 @@ class ConnectionService extends ChangeNotifier {
     _partnerLongitude = null;
     _partnerLocationUpdatedAt = null;
     _partnerGender = null;
+    _myLatitude = null;
+    _myLongitude = null;
     print('💚 [h2h] Geolocation tracking stopped.');
   }
 
@@ -415,27 +438,48 @@ class ConnectionService extends ChangeNotifier {
         _partnerGender = data['gender'] as String?;
         _partnerStickyNote = data['stickyNote'] as String?;
         _partnerIsTyping = data['isTyping'] as bool? ?? false;
+        _partnerGameScore = data['gameScore'] as int? ?? 0;
+
+        // Synchronize partner's displayName real-time
+        final partnerDisplayName = data['displayName'] as String?;
+        if (partnerDisplayName != null && partnerDisplayName.isNotEmpty) {
+          _partnerDisplayName = partnerDisplayName;
+          final myUser = _authService.currentUser;
+          if (myUser != null && myUser.partnerName != partnerDisplayName) {
+            // Update local memory first
+            _authService.updatePartnerDetails(
+              myUser.partnerUid,
+              partnerDisplayName,
+              partnerNickname: myUser.partnerNickname == myUser.partnerName ? partnerDisplayName : myUser.partnerNickname,
+              connectedAt: myUser.connectedAt,
+            );
+            // Save to Firestore so it is persistent and both devices are synchronized
+            _firestore.collection('users').doc(myUser.uid).update({
+              'partnerName': partnerDisplayName,
+              if (myUser.partnerNickname == myUser.partnerName) 'partnerNickname': partnerDisplayName,
+            }).catchError((e) => debugPrint('🧡 [h2h] Failed to sync partnerDisplayName to Firestore: $e'));
+          }
+        }
         notifyListeners();
         
         // Trigger widget update so partner's status changes are reflected!
+        final displayNameToUse = _partnerDisplayName ?? _authService.currentUser?.partnerName ?? 'Partner';
         if (_events.isNotEmpty) {
           final latest = _events.first;
           final displayMsg = _getDefaultMessage(latest.type);
           updateHomeScreenWidget(
-            _authService.currentUser?.partnerName ?? 'Partner',
-            '${_authService.currentUser?.partnerName ?? 'Partner'} $displayMsg',
+            displayNameToUse,
+            '$displayNameToUse $displayMsg',
           );
         } else {
           updateHomeScreenWidget(
-            _authService.currentUser?.partnerName ?? 'Partner',
+            displayNameToUse,
             'No taps yet',
           );
         }
       }
     });
   }
-
-  bool _containsEvent(String id) => _events.any((e) => e.id == id);
 
   String _getConversationId(String u1, String u2) =>
       u1.compareTo(u2) < 0 ? '${u1}_$u2' : '${u2}_$u1';
@@ -737,38 +781,56 @@ class ConnectionService extends ChangeNotifier {
       batch.update(_firestore.collection('users').doc(myId), {'streakCount': currentStreak});
       batch.update(_firestore.collection('users').doc(partnerId), {'streakCount': currentStreak});
       await batch.commit();
+      print('💚 [h2h] Event committed to Firestore. Checking partner FCM preferences...');
 
-      // Log partner FCM token for background notification delivery
+      // Fetch partner's FCM token and preferences
       final partnerDoc = await _firestore.collection('users').doc(partnerId).get();
-      final partnerToken = partnerDoc.data()?['fcmToken'] as String?;
-      if (partnerToken != null && partnerToken.isNotEmpty) {
-        print('💚 [h2h] Partner FCM token found.');
-        
-        // FCM V1 API — secure, uses Service Account from Firestore
-        try {
-          String? serviceAccountJson = _cachedServiceAccountJson;
-          if (serviceAccountJson == null || serviceAccountJson.isEmpty) {
-            print('💚 [h2h] Service account JSON missing in cache. Reading from Firestore...');
-            final fcmConfigDoc = await _firestore.collection('config').doc('fcm').get();
-            serviceAccountJson = fcmConfigDoc.data()?['serviceAccount'] as String?;
-            _cachedServiceAccountJson = serviceAccountJson;
-          }
+      final partnerData = partnerDoc.data() ?? {};
+      final partnerToken = partnerData['fcmToken'] as String?;
+      final pushNotificationsEnabled = partnerData['pushNotificationsEnabled'] as bool? ?? true;
+      final soundEnabled = partnerData['soundEnabled'] as bool? ?? true;
+      
+      if (partnerToken == null || partnerToken.isEmpty) {
+        print('🧡 [h2h] Partner has NO FCM token saved! Notification cannot be sent.');
+        print('🧡 [h2h] Partner doc exists: ${partnerDoc.exists}, partnerId: $partnerId');
+        return;
+      }
 
-          if (serviceAccountJson != null && serviceAccountJson.isNotEmpty) {
-            await _sendFcmV1Notification(
-              serviceAccountJson: serviceAccountJson,
-              token: partnerToken,
-              title: _authService.currentUser!.displayName,
-              body: event.message,
-              type: type,
-              senderId: myId,
-            );
-          } else {
-            print('🧡 [h2h] No serviceAccount configured in Firestore config/fcm.');
+      if (!pushNotificationsEnabled) {
+        print('🧡 [h2h] Partner has disabled push notifications. Skipping.');
+        return;
+      }
+
+      print('💚 [h2h] Partner FCM token found: ${partnerToken.substring(0, 20)}...');
+
+      // FCM V1 API — secure, uses Service Account from Firestore config
+      try {
+        String? serviceAccountJson = _cachedServiceAccountJson;
+        if (serviceAccountJson == null || serviceAccountJson.isEmpty) {
+          print('💚 [h2h] Reading serviceAccount from Firestore config/fcm...');
+          final fcmConfigDoc = await _firestore.collection('config').doc('fcm').get();
+          print('💚 [h2h] config/fcm doc exists: ${fcmConfigDoc.exists}');
+          serviceAccountJson = fcmConfigDoc.data()?['serviceAccount'] as String?;
+          _cachedServiceAccountJson = serviceAccountJson;
+          if (serviceAccountJson == null || serviceAccountJson.isEmpty) {
+            print('🧡 [h2h] serviceAccount field is EMPTY in Firestore config/fcm!');
+            print('🧡 [h2h] ⚠️  Go to Firestore → config → fcm → add serviceAccount field with your Firebase service account JSON string.');
+            return;
           }
-        } catch (fcmErr) {
-          print('🧡 [h2h] FCM V1 notification failed: $fcmErr');
+          print('💚 [h2h] serviceAccount JSON loaded (${serviceAccountJson.length} chars)');
         }
+
+        await _sendFcmV1Notification(
+          serviceAccountJson: serviceAccountJson,
+          token: partnerToken,
+          title: _authService.currentUser!.displayName,
+          body: event.message,
+          type: type,
+          senderId: myId,
+          soundEnabled: soundEnabled,
+        );
+      } catch (fcmErr) {
+        print('🧡 [h2h] FCM V1 notification failed: $fcmErr');
       }
     } catch (e) {
       print('🧡 [h2h] Send event error: $e');
@@ -801,7 +863,12 @@ class ConnectionService extends ChangeNotifier {
         androidName: 'LoveWidgetProvider',
         iOSName: 'LoveWidget',
       );
-      print('💚 [h2h] Home Screen Widget updated successfully! Note: "$receivedNote"');
+      await HomeWidget.updateWidget(
+        name: 'LoveHeartWidgetProvider',
+        androidName: 'LoveHeartWidgetProvider',
+        iOSName: 'LoveHeartWidget',
+      );
+      print('💚 [h2h] Both Home Screen Widgets updated successfully! Note: "$receivedNote"');
     } catch (e) {
       print('🧡 [h2h] Error updating home screen widget: $e');
     }
@@ -816,6 +883,7 @@ class ConnectionService extends ChangeNotifier {
     required String body,
     required String type,
     required String senderId,
+    required bool soundEnabled,
   }) async {
     try {
       final now = DateTime.now().toUtc();
@@ -866,14 +934,16 @@ class ConnectionService extends ChangeNotifier {
           'android': {
             'priority': 'high',
             'notification': {
-              'channel_id': 'high_importance_channel',
-              'sound': 'default',
+              'channel_id': soundEnabled ? 'high_importance_channel' : 'silent_importance_channel',
+              if (soundEnabled) 'sound': 'default',
               'icon': 'ic_notification',
             },
           },
           'apns': {
             'payload': {
-              'aps': {'sound': 'default'},
+              'aps': {
+                if (soundEnabled) 'sound': 'default',
+              },
             },
           },
           'data': {
@@ -912,6 +982,39 @@ class ConnectionService extends ChangeNotifier {
 
   // Refresh partner location on demand (user tapped the GPS refresh button)
   Future<void> refreshPartnerLocation() async {
+    // 1. Get and update my own current location immediately on demand
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+        if (_locationSubscription == null) {
+          startLocationTracking();
+        }
+        Position position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.medium,
+            timeLimit: Duration(seconds: 8),
+          ),
+        );
+        _myLatitude = position.latitude;
+        _myLongitude = position.longitude;
+        final myUid = _authService.currentUser?.uid;
+        if (myUid != null) {
+          await _firestore.collection('users').doc(myUid).update({
+            'latitude': position.latitude,
+            'longitude': position.longitude,
+            'locationUpdatedAt': DateTime.now().toIso8601String(),
+          });
+          print('💚 [h2h] Updated my own location on refresh demand.');
+        }
+      }
+    } catch (e) {
+      print('🧡 [h2h] Failed to update my own location on refresh: $e');
+    }
+
+    // 2. Fetch partner's location
     final partnerId = _authService.currentUser?.partnerUid;
     if (partnerId == null || partnerId.isEmpty) return;
     try {
@@ -971,6 +1074,22 @@ class ConnectionService extends ChangeNotifier {
   void onUserStoppedTypingNote() {
     _typingTimer?.cancel();
     updateMyTypingStatus(false);
+  }
+
+  // Update game score in Firestore
+  Future<void> updateMyGameScore(int score) async {
+    final myUid = _authService.currentUser?.uid;
+    if (myUid == null) return;
+    try {
+      await _firestore.collection('users').doc(myUid).update({
+        'gameScore': score,
+      });
+      _authService.currentUser?.copyWith(gameScore: score);
+      notifyListeners();
+      print('💚 [h2h] Game score updated to $score');
+    } catch (e) {
+      print('🧡 [h2h] updateMyGameScore error: $e');
+    }
   }
 }
 

@@ -75,7 +75,12 @@
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app requires location permission to show your location to your connected partner in real-time.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app requires background location permission to update your partner with your current location even when backgrounded.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app requires location permission to share your status and location with your partner.</string>
 </dict>
 </plist>

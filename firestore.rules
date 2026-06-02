@@ -39,11 +39,11 @@ service cloud.firestore {
       // (needed to fetch partner info, fcmToken, battery level, etc.)
       allow read: if isAuth();
 
-      // Partner can update pairing-related fields on your profile
+      // Partner can update pairing-related fields and streak count on your profile
       allow update: if isAuth()
         && !isOwner(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['partnerUid', 'partnerName', 'connectedAt', 'pairingCode', 'fcmToken']);
+            .hasOnly(['partnerUid', 'partnerName', 'connectedAt', 'pairingCode', 'fcmToken', 'streakCount']);
     }
 
     // ──────────────────────────────────────────────

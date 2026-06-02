@@ -11,7 +11,7 @@ class MainActivity : FlutterActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Create high-importance notification channel for FCM push notifications
+        // Create notification channels for FCM push notifications
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 "high_importance_channel",
@@ -23,8 +23,20 @@ class MainActivity : FlutterActivity() {
                 enableVibration(true)
             }
             
+            val silentChannel = NotificationChannel(
+                "silent_importance_channel",
+                "Silent Notifications",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "This channel is used for silent partner notifications."
+                enableLights(true)
+                enableVibration(false)
+                setSound(null, null)
+            }
+            
             val manager = getSystemService(NotificationManager::class.java)
             manager?.createNotificationChannel(channel)
+            manager?.createNotificationChannel(silentChannel)
         }
     }
 

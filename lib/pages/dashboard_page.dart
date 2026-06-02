@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_map/flutter_map.dart' as fm;
 import 'package:latlong2/latlong.dart';
+import 'package:home_widget/home_widget.dart';
 import '../models/love_event.dart';
 import '../services/auth_service.dart';
 import '../services/connection_service.dart';
@@ -19,6 +21,9 @@ import 'chat_page.dart';
 import 'profile_page.dart';
 import 'pairing_page.dart';
 import 'love_draw_page.dart';
+import 'write_note_page.dart';
+import 'login_page.dart';
+import 'ghost_type_game_page.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -43,14 +48,128 @@ class _DashboardPageState extends State<DashboardPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final conn = Provider.of<ConnectionService>(context, listen: false);
       conn.onIncomingLoveEvent = _handleIncomingLoveEvent;
+      _checkPairingConfirmation();
     });
+  }
+
+  Future<void> _checkPairingConfirmation() async {
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final conn = Provider.of<ConnectionService>(context, listen: false);
+    if (auth.isAuthenticated && auth.isPaired) {
+      final confirmed = await HomeWidget.getWidgetData<bool>('pairing_confirmed') ?? false;
+      if (!confirmed) {
+        if (mounted) {
+          _showContinuePairingDialog(context, auth, conn);
+        }
+      }
+    }
+  }
+
+  void _showContinuePairingDialog(BuildContext context, AuthService auth, ConnectionService conn) {
+    final partnerName = conn.partnerDisplayName ?? auth.currentUser?.partnerName ?? 'your partner';
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext ctx) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+            backgroundColor: Colors.white,
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Welcome Back!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Image.asset(
+                    'assets/images/hands_heart_3d.png',
+                    width: 140,
+                    height: 140,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'You were previously paired with $partnerName. Would you like to continue this connection?',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: AppTheme.textLight,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () async {
+                            Navigator.pop(ctx);
+                            // Choose No: unpair
+                            await auth.unpairPartner();
+                            await HomeWidget.saveWidgetData<bool>('pairing_confirmed', false);
+                            if (context.mounted) {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (_) => const PairingPage()),
+                              );
+                            }
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.primary,
+                            side: const BorderSide(color: AppTheme.primary, width: 1.5),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          child: const Text('No', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            Navigator.pop(ctx);
+                            // Choose Yes: confirm connection
+                            await HomeWidget.saveWidgetData<bool>('pairing_confirmed', true);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            elevation: 0,
+                          ),
+                          child: const Text('Yes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _handleIncomingLoveEvent(LoveEvent event) {
     if (!mounted) return;
 
     // Trigger phone vibration / haptic feedback
-    HapticFeedback.vibrate();
+    final auth = Provider.of<AuthService>(context, listen: false);
+    if (auth.currentUser?.vibrationEnabled ?? true) {
+      HapticFeedback.vibrate();
+    }
 
     // Trigger sweet customized in-app slide down banner notification
     setState(() {
@@ -69,7 +188,10 @@ class _DashboardPageState extends State<DashboardPage> {
   void _sendLoveTap(ConnectionService conn) {
     conn.sendLoveEvent('love_tap');
     _heartsOverlayKey.currentState?.spawnHearts();
-    HapticFeedback.vibrate(); // Direct phone vibration when big heart is tapped!
+    final auth = Provider.of<AuthService>(context, listen: false);
+    if (auth.currentUser?.vibrationEnabled ?? true) {
+      HapticFeedback.vibrate(); // Direct phone vibration when big heart is tapped!
+    }
   }
 
   void _sendMoodTap(ConnectionService conn, String type, String emoji, String label) {
@@ -88,7 +210,7 @@ class _DashboardPageState extends State<DashboardPage> {
         backgroundColor: AppTheme.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3), // 3 seconds only
       ),
     );
   }
@@ -97,6 +219,27 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthService>(context);
     final conn = Provider.of<ConnectionService>(context);
+
+    // Real-time unauthenticated navigation: if not authenticated, redirect to LoginPage immediately
+    if (!auth.isAuthenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+            (route) => false,
+          );
+        }
+      });
+      return Container(
+        decoration: AppTheme.romanticGradient(),
+        child: const Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+            child: SkeletonLoader(),
+          ),
+        ),
+      );
+    }
 
     // Real-time unpairing navigation: if authenticated but unpaired, redirect to PairingPage immediately
     if (auth.isAuthenticated && !auth.isPaired) {
@@ -121,7 +264,7 @@ class _DashboardPageState extends State<DashboardPage> {
       );
     }
 
-    final partnerName = auth.currentUser?.partnerName ?? 'Partner';
+    final partnerName = conn.partnerDisplayName ?? 'Partner';
 
     final List<Widget> pages = [
       _buildHomeDashboard(auth, conn, partnerName),
@@ -414,24 +557,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
               const SizedBox(height: 24),
 
-              if (auth.currentUser?.partnerUid != null && auth.currentUser!.partnerUid!.isNotEmpty) ...[
-                _buildPartnerBatteryCard(conn, partnerName),
-                const SizedBox(height: 16),
-                _buildPartnerStatusCard(auth, conn, partnerName),
-                const SizedBox(height: 16),
-                _buildLoveDrawCard(conn, auth),
-                const SizedBox(height: 16),
-                _buildGPSMapCard(conn, auth),
-                const SizedBox(height: 16),
-                _buildNextMeetingCard(auth, conn),
-                const SizedBox(height: 16),
-                _buildStickyNotesCard(auth, conn, partnerName),
-                const SizedBox(height: 20),
-              ],
-
-              const SizedBox(height: 20),
-
-              // BOTTOM STATS CARDS ROW (Highly Adaptive for All Screens)
+              // STATS CARDS ROW (Three Box)
               Row(
                 children: [
                   Expanded(
@@ -462,6 +588,31 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ],
               ),
+
+              const SizedBox(height: 24),
+
+              if (auth.currentUser?.partnerUid != null && auth.currentUser!.partnerUid!.isNotEmpty) ...[
+                // update your status card
+                _buildPartnerStatusCard(auth, conn, partnerName),
+                const SizedBox(height: 16),
+                _buildNextMeetingCard(auth, conn),
+                const SizedBox(height: 16),
+                // note card
+                _buildStickyNotesCard(auth, conn, partnerName),
+                const SizedBox(height: 16),
+                // battery percentage card
+                _buildPartnerBatteryCard(conn, partnerName),
+                const SizedBox(height: 16),
+                // map card
+                _buildGPSMapCard(conn, auth),
+                const SizedBox(height: 16),
+                // draw card
+                _buildLoveDrawCard(conn, auth),
+                const SizedBox(height: 16),
+                // game card
+                _buildGameCard(conn, auth),
+                const SizedBox(height: 20),
+              ],
 
               const SizedBox(height: 36),
 
@@ -750,7 +901,9 @@ class _DashboardPageState extends State<DashboardPage> {
     return GestureDetector(
       onTap: () {
         auth.updateCustomStatus(status, _getStatusFallbackEmoji(status));
-        HapticFeedback.selectionClick();
+        if (auth.currentUser?.vibrationEnabled ?? true) {
+          HapticFeedback.selectionClick();
+        }
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -862,6 +1015,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         content: const Text('Next meeting date updated!', style: TextStyle(fontWeight: FontWeight.w600)),
                         backgroundColor: AppTheme.primary,
                         behavior: SnackBarBehavior.floating,
+                        duration: const Duration(seconds: 3),
                       ),
                     );
                   }
@@ -1054,7 +1208,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.palette_rounded,
+                  Icons.palette_outlined,
                   color: AppTheme.primary,
                   size: 20,
                 ),
@@ -1133,12 +1287,19 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildGPSMapCard(ConnectionService conn, AuthService auth) {
     final lat = conn.partnerLatitude;
     final lng = conn.partnerLongitude;
-    final partnerName = auth.currentUser?.partnerName ?? 'Partner';
+    final myLat = conn.myLatitude;
+    final myLng = conn.myLongitude;
+    final partnerName = conn.partnerDisplayName ?? 'Partner';
     final partnerGender = conn.partnerGender;
     final partnerPhoto = conn.partnerPhotoUrl;
     
-    final bool hasLocation = lat != null && lng != null;
-    
+    final myPhoto = auth.currentUser?.photoUrl;
+    final myGender = auth.currentUser?.gender;
+
+    final bool hasPartnerLocation = lat != null && lng != null && !lat.isNaN && !lng.isNaN;
+    final bool hasMyLocation = myLat != null && myLng != null && !myLat.isNaN && !myLng.isNaN;
+    final bool showMap = hasPartnerLocation || hasMyLocation;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1159,7 +1320,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.location_on_rounded,
+                  Icons.location_on_outlined,
                   color: Colors.blue,
                   size: 20,
                 ),
@@ -1167,7 +1328,7 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  "Partner's Location",
+                  showMap ? "Live Map" : "Partner's Location",
                   style: GoogleFonts.quicksand(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1179,7 +1340,9 @@ class _DashboardPageState extends State<DashboardPage> {
               // Refresh button
               GestureDetector(
                 onTap: () {
-                  HapticFeedback.selectionClick();
+                  if (auth.currentUser?.vibrationEnabled ?? true) {
+                    HapticFeedback.selectionClick();
+                  }
                   conn.refreshPartnerLocation();
                 },
                 child: Container(
@@ -1194,7 +1357,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ],
           ),
           const SizedBox(height: 16),
-          if (!hasLocation)
+          if (!showMap)
             Container(
               height: 180,
               decoration: BoxDecoration(
@@ -1216,35 +1379,27 @@ class _DashboardPageState extends State<DashboardPage> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'Ensure location permission is enabled on both devices and tap refresh.',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.quicksand(
+                          fontSize: 10,
+                          color: AppTheme.textLight.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
             )
           else
             Builder(builder: (context) {
-              // Guard: ensure lat/lng are valid finite numbers
-              if (lat == null || lng == null || lat.isNaN || lng.isNaN || lat.isInfinite || lng.isInfinite) {
-                return Container(
-                  height: 180,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('📍', style: TextStyle(fontSize: 32)),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Waiting for $partnerName\'s location...',
-                          style: GoogleFonts.quicksand(fontSize: 12, color: AppTheme.textLight, fontWeight: FontWeight.w500),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
+              final centerLat = hasPartnerLocation ? lat : myLat!;
+              final centerLng = hasPartnerLocation ? lng : myLng!;
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -1256,10 +1411,11 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: fm.FlutterMap(
+                      key: ValueKey('map_${centerLat}_${centerLng}_${lat}_${myLat}'),
                       options: fm.MapOptions(
-                        initialCenter: LatLng(lat, lng),
+                        initialCenter: LatLng(centerLat, centerLng),
                         initialZoom: 14.5,
-                        minZoom: 10.0,
+                        minZoom: 2.0,
                         maxZoom: 18.0,
                         interactionOptions: const fm.InteractionOptions(
                           flags: fm.InteractiveFlag.pinchZoom | fm.InteractiveFlag.drag,
@@ -1272,31 +1428,52 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                         fm.MarkerLayer(
                           markers: [
-                            fm.Marker(
-                              width: 56,
-                              height: 56,
-                              point: LatLng(lat, lng),
-                              child: _buildMapMarker(partnerPhoto, partnerGender ?? 'Other'),
-                            ),
+                            if (hasPartnerLocation)
+                              fm.Marker(
+                                width: 56,
+                                height: 56,
+                                point: LatLng(lat, lng),
+                                child: _buildMapMarker(partnerPhoto, partnerGender ?? 'Other', isPartner: true),
+                              ),
+                            if (hasMyLocation)
+                              fm.Marker(
+                                width: 56,
+                                height: 56,
+                                point: LatLng(myLat, myLng),
+                                child: _buildMapMarker(myPhoto, myGender ?? 'Other', isPartner: false),
+                              ),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  if (conn.partnerLocationUpdatedAt != null) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Icon(Icons.refresh_rounded, size: 12, color: AppTheme.textLight.withValues(alpha: 0.6)),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Updated ${_formatLocationTime(conn.partnerLocationUpdatedAt!)}',
-                          style: GoogleFonts.quicksand(fontSize: 11, color: AppTheme.textLight.withValues(alpha: 0.7)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          hasPartnerLocation ? 'Showing $partnerName\'s location' : 'Showing your location ($partnerName offline)',
+                          style: GoogleFonts.quicksand(fontSize: 10, color: AppTheme.textLight.withValues(alpha: 0.6)),
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      if (conn.partnerLocationUpdatedAt != null && hasPartnerLocation)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.refresh_rounded, size: 12, color: AppTheme.textLight.withValues(alpha: 0.6)),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Updated ${_formatLocationTime(conn.partnerLocationUpdatedAt!)}',
+                                style: GoogleFonts.quicksand(fontSize: 11, color: AppTheme.textLight.withValues(alpha: 0.7)),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
               );
             }),
@@ -1306,7 +1483,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   // Map marker with photo or 3D emoji, no boxy background
-  Widget _buildMapMarker(String? photoUrl, String gender) {
+  Widget _buildMapMarker(String? photoUrl, String gender, {required bool isPartner}) {
     Widget avatar;
     if (photoUrl != null && photoUrl.isNotEmpty) {
       if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
@@ -1340,6 +1517,8 @@ class _DashboardPageState extends State<DashboardPage> {
       avatar = _genderEmojiMarker(gender);
     }
 
+    final markerColor = isPartner ? AppTheme.primary : Colors.blue;
+
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -1349,11 +1528,11 @@ class _DashboardPageState extends State<DashboardPage> {
           height: 56,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppTheme.primary.withValues(alpha: 0.15),
-            border: Border.all(color: AppTheme.primary, width: 2.5),
+            color: markerColor.withValues(alpha: 0.15),
+            border: Border.all(color: markerColor, width: 2.5),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primary.withValues(alpha: 0.3),
+                color: markerColor.withValues(alpha: 0.3),
                 blurRadius: 10,
                 spreadRadius: 1,
               ),
@@ -1374,8 +1553,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
   // ─── STICKY NOTES ────────────────────────────────────────────────────────
   Widget _buildStickyNotesCard(AuthService auth, ConnectionService conn, String partnerName) {
-    final myName = auth.currentUser?.displayName ?? 'Me';
-    final myNote = auth.currentUser?.stickyNote ?? '';
     final partnerNote = conn.partnerStickyNote ?? '';
 
     return Container(
@@ -1389,7 +1566,7 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header row with round background icon & Title & Erase button
+          // Header row with round background icon & Title & Write button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1402,14 +1579,136 @@ class _DashboardPageState extends State<DashboardPage> {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.note_alt_rounded,
+                      Icons.note_alt_outlined,
                       color: AppTheme.primary,
                       size: 20,
                     ),
                   ),
                   const SizedBox(width: 10),
                   const Text(
-                    "Sticky Notes",
+                    "Daily Note",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textDark,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Tooltip(
+                    message: "Your partner's changes will appear here in real-time. Tap 'Write' to update the note shown on their screen.",
+                    triggerMode: TooltipTriggerMode.tap,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    showDuration: const Duration(seconds: 6),
+                    textStyle: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.info_outline_rounded,
+                      color: AppTheme.textLight.withValues(alpha: 0.7),
+                      size: 16,
+                    ),
+                  ),
+                ],
+              ),
+              // Capsule button: Write
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const WriteNotePage()),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primary.withValues(alpha: 0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(
+                        Icons.edit_note_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'Write',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          EditableStickyNote(
+            name: partnerName,
+            content: partnerNote,
+            color: const Color(0xFFDDF1FF), // soft sky blue paper
+            lineColor: const Color(0xFF9DD4F0),
+            nameColor: const Color(0xFF0070A8),
+            isEditable: false, // partner's note to me (read-only for me)
+            isTypingHint: conn.partnerIsTyping,
+            onSave: null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGameCard(ConnectionService conn, AuthService auth) {
+    final myScore = auth.currentUser?.gameScore ?? 0;
+    final partnerScore = conn.partnerGameScore;
+    final partnerName = conn.partnerDisplayName ?? auth.currentUser?.partnerName ?? 'Partner';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppTheme.premiumShadow,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header: Ghost Type & Play Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.keyboard_alt_outlined,
+                      color: Colors.purple,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    "Ghost Type",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -1418,89 +1717,111 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ],
               ),
-              // Clear Note button (clears the note I write, i.e., partner's note on the right)
+              // Play button on the right
               GestureDetector(
-                onTap: () => _confirmClearNote(context, conn, partnerName),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const GhostTypeGamePage()),
+                  );
+                },
                 child: Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.08),
-                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [AppTheme.primary, AppTheme.accent],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.purple.withValues(alpha: 0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  child: const Icon(
-                    Icons.delete_outline_rounded,
-                    color: AppTheme.textLight,
-                    size: 18,
+                  child: const Row(
+                    children: [
+                      Icon(
+                        Icons.play_arrow_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'Play',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: EditableStickyNote(
-                    name: myName,
-                    content: myNote,
-                    color: const Color(0xFFFEF7CD), // warm yellow paper
-                    lineColor: const Color(0xFFE8D87A),
-                    nameColor: const Color(0xFFA07800),
-                    isEditable: true, // I write my own note for partner to see
-                    onSave: (text) => auth.updateStickyNote(text),
-                    onTyping: () => conn.onUserTypingNote(),
-                    onStopTyping: () => conn.onUserStoppedTypingNote(),
+          // Scores UI
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.purple.withValues(alpha: 0.1)),
+                  ),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'My Score',
+                        style: TextStyle(fontSize: 11, color: AppTheme.textLight, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$myScore',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.purple,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: EditableStickyNote(
-                    name: partnerName,
-                    content: partnerNote,
-                    color: const Color(0xFFDDF1FF), // soft sky blue paper
-                    lineColor: const Color(0xFF9DD4F0),
-                    nameColor: const Color(0xFF0070A8),
-                    isEditable: false, // partner's note to me (read-only for me)
-                    isTypingHint: conn.partnerIsTyping,
-                    onSave: null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        "$partnerName's Score",
+                        style: const TextStyle(fontSize: 11, color: AppTheme.textLight, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$partnerScore',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmClearNote(BuildContext context, ConnectionService conn, String partnerName) {
-    final auth = Provider.of<AuthService>(context, listen: false);
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
-          'Clear Note?',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: const Text(
-          'Are you sure you want to clear your note?',
-          style: TextStyle(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          TextButton(
-            onPressed: () {
-              auth.updateStickyNote('');
-              conn.onUserStoppedTypingNote();
-              Navigator.pop(ctx);
-            },
-            child: const Text('Clear', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+              ),
+            ],
           ),
         ],
       ),

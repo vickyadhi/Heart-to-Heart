@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
 import 'login_page.dart';
@@ -20,6 +21,8 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
   late Animation<double> _logoScale;
   double _loadProgress = 0.0;
   Timer? _loadTimer;
+  Timer? _fallbackTimer;
+  bool _forceProceed = false;
 
   @override
   void initState() {
@@ -46,12 +49,24 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
         }
       });
     });
+
+    // Safety fallback timer to prevent infinite loading on slow emulator/network
+    _fallbackTimer = Timer(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        setState(() {
+          _forceProceed = true;
+        });
+        _loadTimer?.cancel();
+        _navigateNext();
+      }
+    });
   }
 
   @override
   void dispose() {
     _logoController.dispose();
     _loadTimer?.cancel();
+    _fallbackTimer?.cancel();
     super.dispose();
   }
 
@@ -60,7 +75,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     
     final authService = Provider.of<AuthService>(context, listen: false);
     
-    if (!authService.isInitialized) {
+    if (!authService.isInitialized && !_forceProceed) {
       Future.delayed(const Duration(milliseconds: 100), _navigateNext);
       return;
     }
@@ -156,13 +171,12 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                         scale: _logoScale,
                         child: _buildLogo(),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 8),
                       // App Name
-                      const Text(
+                      Text(
                         'h2h',
-                        style: TextStyle(
+                        style: GoogleFonts.cherryBombOne(
                           fontSize: 48,
-                          fontWeight: FontWeight.w900,
                           color: Colors.white,
                           letterSpacing: -1.0,
                         ),

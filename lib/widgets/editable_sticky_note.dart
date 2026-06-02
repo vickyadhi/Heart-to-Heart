@@ -77,7 +77,6 @@ class _EditableStickyNoteState extends State<EditableStickyNote> {
     const int lineCount = 5;
     const double headerH = 28.0;
     const double topPad = 10.0;
-    const double firstLineY = topPad + headerH + 4;
 
     return Container(
       constraints: const BoxConstraints(minHeight: 168),
@@ -125,19 +124,22 @@ class _EditableStickyNoteState extends State<EditableStickyNote> {
                         Expanded(
                           child: widget.isTypingHint
                               ? Row(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text(
-                                      widget.name,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.quicksand(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                        color: widget.nameColor,
+                                    Flexible(
+                                      child: Text(
+                                        widget.name,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.quicksand(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                          color: widget.nameColor,
+                                        ),
                                       ),
                                     ),
-                                    const SizedBox(width: 6),
+                                    const SizedBox(width: 4),
                                     Text(
-                                      '✏️ typing…',
+                                      '✏️…',
                                       style: GoogleFonts.quicksand(
                                         fontSize: 10,
                                         color: widget.nameColor.withOpacity(0.7),

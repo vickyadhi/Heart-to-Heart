@@ -15,12 +15,18 @@ class AuthService extends ChangeNotifier {
   bool _isLoading = false;
   bool _isInitialized = false;
   StreamSubscription<DocumentSnapshot>? _userDocSubscription;
+  String? _lastUnpairedPartnerName;
 
   UserProfile? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isInitialized => _isInitialized;
   bool get isAuthenticated => _currentUser != null;
   bool get isPaired => _currentUser?.partnerUid != null && _currentUser!.partnerUid!.isNotEmpty;
+  String? get lastUnpairedPartnerName => _lastUnpairedPartnerName;
+
+  void clearLastUnpairedPartnerName() {
+    _lastUnpairedPartnerName = null;
+  }
 
   AuthService() {
     // Synchronously check for cached user session to maintain login state instantly on startup
@@ -38,7 +44,7 @@ class AuthService extends ChangeNotifier {
         isOnline: true,
       );
       refreshUser(fbUser.uid).timeout(
-        const Duration(seconds: 10),
+        const Duration(seconds: 2),
         onTimeout: () {
           debugPrint('[AuthService] refreshUser timed out on startup — proceeding anyway');
         },
@@ -47,6 +53,9 @@ class AuthService extends ChangeNotifier {
         notifyListeners();
       }).catchError((e) {
         debugPrint('[AuthService] refreshUser error on startup: $e');
+        if (e.toString().contains('permission-denied') || e.toString().contains('cloud_firestore/permission-denied')) {
+          logout();
+        }
         _isInitialized = true;
         notifyListeners();
       });
@@ -61,8 +70,15 @@ class AuthService extends ChangeNotifier {
     try {
       _firebaseAuth.authStateChanges().listen((firebase_auth.User? user) async {
         if (user != null) {
-          await refreshUser(user.uid);
-          _subscribeToUserDoc(user.uid);
+          try {
+            await refreshUser(user.uid);
+            _subscribeToUserDoc(user.uid);
+          } catch (e) {
+            debugPrint('[AuthService] authStateChanges error: $e');
+            if (e.toString().contains('permission-denied') || e.toString().contains('cloud_firestore/permission-denied')) {
+              await logout();
+            }
+          }
         } else {
           _userDocSubscription?.cancel();
           _userDocSubscription = null;
@@ -91,6 +107,9 @@ class AuthService extends ChangeNotifier {
       }
     }, onError: (e) {
       print('Error in user doc subscription: $e');
+      if (e.toString().contains('permission-denied') || e.toString().contains('cloud_firestore/permission-denied')) {
+        logout();
+      }
     });
   }
 
@@ -170,6 +189,9 @@ class AuthService extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Error refreshing user: $e');
+      if (e.toString().contains('permission-denied') || e.toString().contains('cloud_firestore/permission-denied')) {
+        rethrow;
+      }
     }
   }
 
@@ -492,6 +514,7 @@ class AuthService extends ChangeNotifier {
   Future<void> unpairPartner() async {
     if (_currentUser == null) return;
     _setLoading(true);
+    _lastUnpairedPartnerName = _currentUser!.partnerNickname ?? _currentUser!.partnerName;
     final oldPartnerUid = _currentUser!.partnerUid;
     _currentUser = _currentUser!.clearPartner();
     try {
@@ -517,6 +540,7 @@ class AuthService extends ChangeNotifier {
   // Clear partner details reactively when partner unpairs us
   void clearPartnerDetails() {
     if (_currentUser == null) return;
+    _lastUnpairedPartnerName = _currentUser!.partnerNickname ?? _currentUser!.partnerName;
     _currentUser = _currentUser!.clearPartner();
     notifyListeners();
   }
@@ -559,6 +583,7 @@ class AuthService extends ChangeNotifier {
     required String gender,
     required String dob,
     required DateTime anniversaryDate,
+    String? partnerNickname,
   }) async {
     if (_currentUser == null) return;
     _setLoading(true);
@@ -567,6 +592,7 @@ class AuthService extends ChangeNotifier {
       gender: gender,
       dob: dob,
       anniversaryDate: anniversaryDate,
+      partnerNickname: partnerNickname ?? _currentUser!.partnerNickname,
       setupComplete: true,
     );
     notifyListeners();
@@ -576,6 +602,7 @@ class AuthService extends ChangeNotifier {
         'gender': gender,
         'dob': dob,
         'anniversaryDate': anniversaryDate.toIso8601String(),
+        if (partnerNickname != null) 'partnerNickname': partnerNickname,
         'setupComplete': true,
       });
     } catch (e) {

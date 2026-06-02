@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 import '../theme.dart';
 import '../services/auth_service.dart';
 import 'login_page.dart';
-import 'pairing_page.dart';
+// import 'pairing_page.dart';
 import 'help_page.dart';
 import 'terms_page.dart';
 import 'privacy_page.dart';
@@ -55,7 +56,17 @@ class _ProfilePageState extends State<ProfilePage> {
       if (pickedFile != null) {
         setState(() => _isUploadingImage = true);
         final bytes = await pickedFile.readAsBytes();
-        final base64Image = base64Encode(bytes);
+        
+        // Compress using image package to 80% quality JPEG
+        String base64Image;
+        final decoded = img.decodeImage(bytes);
+        if (decoded != null) {
+          final resized = img.copyResize(decoded, width: 120, height: 120);
+          final compressedBytes = img.encodeJpg(resized, quality: 80);
+          base64Image = base64Encode(compressedBytes);
+        } else {
+          base64Image = base64Encode(bytes);
+        }
         
         await auth.updateProfilePicture(base64Image);
         
@@ -65,6 +76,7 @@ class _ProfilePageState extends State<ProfilePage> {
               content: Text('Profile picture updated!', style: TextStyle(fontWeight: FontWeight.bold)),
               backgroundColor: Colors.green,
               behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 3),
             ),
           );
         }
@@ -76,6 +88,7 @@ class _ProfilePageState extends State<ProfilePage> {
             content: Text('Error updating profile picture: $e', style: const TextStyle(fontWeight: FontWeight.bold)),
             backgroundColor: AppTheme.primary,
             behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -530,56 +543,26 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ]),
 
-                // ─── GROUP 2: PREFERENCES ───
-                _buildSettingsGroup('Preferences', [
-                  _buildSwitchTile(
-                    icon: HugeIcons.strokeRoundedNotification02,
-                    iconColor: AppTheme.primary,
-                    title: 'Push Notifications',
-                    subtitle: 'Receive notifications instantly',
-                    value: user?.pushNotificationsEnabled ?? true,
-                    onChanged: (val) => auth.updateSetting('pushNotificationsEnabled', val),
-                  ),
-                  _buildDivider(),
-                  _buildSwitchTile(
-                    icon: HugeIcons.strokeRoundedVolumeMute01,
-                    iconColor: AppTheme.primary,
-                    title: 'Sound',
-                    subtitle: 'Play sound for notifications',
-                    value: user?.soundEnabled ?? true,
-                    onChanged: (val) => auth.updateSetting('soundEnabled', val),
-                  ),
-                  _buildDivider(),
-                  _buildSwitchTile(
-                    icon: HugeIcons.strokeRoundedSmartPhone01,
-                    iconColor: AppTheme.primary,
-                    title: 'Vibration',
-                    subtitle: 'Vibrate on new messages',
-                    value: user?.vibrationEnabled ?? true,
-                    onChanged: (val) => auth.updateSetting('vibrationEnabled', val),
-                  ),
-                ]),
-
-                // ─── GROUP 3: PRIVACY ───
-                _buildSettingsGroup('Privacy', [
-                  _buildSwitchTile(
-                    icon: HugeIcons.strokeRoundedEye,
-                    iconColor: AppTheme.primary,
-                    title: 'Show Online Status',
-                    subtitle: "Let partner see when you're online",
-                    value: user?.showOnlineStatus ?? true,
-                    onChanged: (val) => auth.updateSetting('showOnlineStatus', val),
-                  ),
-                  _buildDivider(),
-                  _buildSwitchTile(
-                    icon: HugeIcons.strokeRoundedCheckmarkCircle01,
-                    iconColor: AppTheme.primary,
-                    title: 'Read Receipts',
-                    subtitle: "Show when you've seen messages",
-                    value: user?.readReceipts ?? true,
-                    onChanged: (val) => auth.updateSetting('readReceipts', val),
-                  ),
-                ]),
+          // ─── GROUP 2: PREFERENCES ───
+          _buildSettingsGroup('Preferences', [
+            _buildSwitchTile(
+              icon: HugeIcons.strokeRoundedVolumeMute01,
+              iconColor: AppTheme.primary,
+              title: 'Sound',
+              subtitle: 'Play sound for notifications',
+              value: user?.soundEnabled ?? true,
+              onChanged: (val) => auth.updateSetting('soundEnabled', val),
+            ),
+            _buildDivider(),
+            _buildSwitchTile(
+              icon: HugeIcons.strokeRoundedSmartPhone01,
+              iconColor: AppTheme.primary,
+              title: 'Vibration',
+              subtitle: 'Vibrate on new messages',
+              value: user?.vibrationEnabled ?? true,
+              onChanged: (val) => auth.updateSetting('vibrationEnabled', val),
+            ),
+          ]),
 
                 // ─── GROUP 4: HELP & LEGAL ───
                 _buildSettingsGroup('Help & Support', [
@@ -865,6 +848,7 @@ class PersonalInformationPage extends StatefulWidget {
 class _PersonalInformationPageState extends State<PersonalInformationPage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
+  late TextEditingController _partnerNicknameController;
   DateTime? _dob;
   DateTime? _anniversary;
   String? _gender;
@@ -876,6 +860,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
     final auth = Provider.of<AuthService>(context, listen: false);
     final user = auth.currentUser;
     _nameController = TextEditingController(text: user?.displayName ?? '');
+    _partnerNicknameController = TextEditingController(text: user?.partnerNickname ?? user?.partnerName ?? '');
     _gender = user?.gender;
     if (user != null && user.dob != null) {
       _dob = DateTime.tryParse(user.dob!);
@@ -886,6 +871,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
   @override
   void dispose() {
     _nameController.dispose();
+    _partnerNicknameController.dispose();
     super.dispose();
   }
 
@@ -923,7 +909,11 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
     if (!_formKey.currentState!.validate()) return;
     if (_dob == null || _gender == null || _anniversary == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all details!')),
+        const SnackBar(
+          content: Text('Please fill all details!'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
       );
       return;
     }
@@ -936,6 +926,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
         gender: _gender!,
         dob: _dob!.toIso8601String().split('T').first,
         anniversaryDate: _anniversary!,
+        partnerNickname: auth.currentUser?.partnerUid != null && auth.currentUser!.partnerUid!.isNotEmpty
+            ? _partnerNicknameController.text.trim()
+            : null,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -943,6 +936,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
             content: Text('Profile updated successfully!', style: TextStyle(fontWeight: FontWeight.bold)),
             backgroundColor: Color(0xFF2E7D32),
             behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 3),
           ),
         );
         Navigator.pop(context);
@@ -950,7 +944,11 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update details: $e')),
+          SnackBar(
+            content: Text('Failed to update details: $e'),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
         );
       }
     } finally {
@@ -1027,13 +1025,18 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                                     content: Text('Password changed successfully!', style: TextStyle(fontWeight: FontWeight.bold)),
                                     backgroundColor: Color(0xFF2E7D32),
                                     behavior: SnackBarBehavior.floating,
+                                    duration: Duration(seconds: 3),
                                   ),
                                 );
                               }
                             } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Error: $e')),
+                                  SnackBar(
+                                    content: Text('Error: $e'),
+                                    behavior: SnackBarBehavior.floating,
+                                    duration: const Duration(seconds: 3),
+                                  ),
                                 );
                               }
                             }
@@ -1120,6 +1123,43 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                 },
               ),
               const SizedBox(height: 20),
+
+              // Partner's Nickname Field (if paired)
+              if (auth.currentUser?.partnerUid != null && auth.currentUser!.partnerUid!.isNotEmpty) ...[
+                Text(
+                  'How should you call your partner?',
+                  style: GoogleFonts.quicksand(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textDark,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _partnerNicknameController,
+                  style: GoogleFonts.quicksand(fontSize: 15),
+                  decoration: InputDecoration(
+                    hintText: 'e.g., Honey, Sweetie...',
+                    fillColor: Colors.white,
+                    filled: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter partner\'s nickname!';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+              ],
 
               // Gender Field
               Text(

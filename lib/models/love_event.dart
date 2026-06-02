@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class LoveEvent {
   final String id;
   final String senderId;
@@ -22,20 +24,27 @@ class LoveEvent {
       'receiverId': receiverId,
       'type': type,
       'message': message,
-      'timestamp': timestamp.toIso8601String(),
+      'timestamp': Timestamp.fromDate(timestamp),
     };
   }
 
   factory LoveEvent.fromMap(Map<String, dynamic> map) {
+    DateTime parsedTime = DateTime.now();
+    final ts = map['timestamp'];
+    if (ts != null) {
+      if (ts is Timestamp) {
+        parsedTime = ts.toDate();
+      } else if (ts is String) {
+        parsedTime = DateTime.tryParse(ts) ?? DateTime.now();
+      }
+    }
     return LoveEvent(
       id: map['id'] ?? '',
       senderId: map['senderId'] ?? '',
       receiverId: map['receiverId'] ?? '',
       type: map['type'] ?? '',
       message: map['message'] ?? '',
-      timestamp: map['timestamp'] != null 
-          ? DateTime.tryParse(map['timestamp']) ?? DateTime.now()
-          : DateTime.now(),
+      timestamp: parsedTime,
     );
   }
 

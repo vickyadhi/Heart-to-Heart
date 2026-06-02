@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -22,6 +23,23 @@ class _ChatPageState extends State<ChatPage> {
 
   // 3D Sticker Drawer state variables
   bool _showStickerDrawer = false;
+
+  ImageProvider? _getAvatarProvider(String? photoUrl) {
+    if (photoUrl == null || photoUrl.isEmpty) return null;
+    if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+      return NetworkImage(photoUrl);
+    }
+    try {
+      String base64Str = photoUrl;
+      if (photoUrl.contains(',')) {
+        base64Str = photoUrl.split(',').last;
+      }
+      return MemoryImage(base64Decode(base64Str));
+    } catch (e) {
+      print('Error decoding avatar Base64 in ChatPage: $e');
+      return null;
+    }
+  }
 
   final List<Map<String, String>> _fluent3DStickers = const [
     {
@@ -156,7 +174,7 @@ class _ChatPageState extends State<ChatPage> {
         ChatBubble(
           event: event,
           isSelf: isSelf,
-          partnerName: widget.partnerName,
+          partnerName: conn.partnerDisplayName ?? widget.partnerName,
           partnerPhotoUrl: partnerPhotoUrl,
           myPhotoUrl: myPhotoUrl,
           myName: myName,
@@ -204,12 +222,12 @@ class _ChatPageState extends State<ChatPage> {
                   child: CircleAvatar(
                     radius: 20,
                     backgroundColor: const Color(0xFFFFEAEE),
-                    backgroundImage: partnerPhotoUrl != null && partnerPhotoUrl.isNotEmpty 
-                        ? NetworkImage(partnerPhotoUrl) 
-                        : null,
+                    backgroundImage: _getAvatarProvider(partnerPhotoUrl),
                     child: partnerPhotoUrl == null || partnerPhotoUrl.isEmpty
                         ? Text(
-                            widget.partnerName.isNotEmpty ? widget.partnerName[0].toUpperCase() : 'K',
+                            (conn.partnerDisplayName ?? widget.partnerName).isNotEmpty 
+                                ? (conn.partnerDisplayName ?? widget.partnerName)[0].toUpperCase() 
+                                : 'K',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -222,7 +240,7 @@ class _ChatPageState extends State<ChatPage> {
                 const SizedBox(width: 12),
                 // Partner Name
                 Text(
-                  widget.partnerName,
+                  conn.partnerDisplayName ?? widget.partnerName,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -405,7 +423,9 @@ class _ChatPageState extends State<ChatPage> {
                           return GestureDetector(
                             onTap: () {
                               conn.sendLoveEvent('sticker', message: sticker['url']!);
-                              HapticFeedback.mediumImpact();
+                              if (auth.currentUser?.vibrationEnabled ?? true) {
+                                HapticFeedback.mediumImpact();
+                              }
                             },
                             child: Container(
                               padding: const EdgeInsets.all(8),
