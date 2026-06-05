@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
 import 'login_page.dart';
@@ -175,8 +174,10 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                       // App Name
                       Text(
                         'h2h',
-                        style: GoogleFonts.cherryBombOne(
+                        style: TextStyle(
+                          fontFamily: 'Gotham',
                           fontSize: 48,
+                          fontWeight: FontWeight.bold,
                           color: Colors.white,
                           letterSpacing: -1.0,
                         ),

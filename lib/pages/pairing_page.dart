@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../theme.dart';
 import 'login_page.dart';
 import 'info_page.dart';
+import 'dashboard_page.dart';
 
 class PairingPage extends StatefulWidget {
   const PairingPage({super.key});
@@ -54,21 +55,21 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
     }
     
     // Check if we came from an unpair event
-    if (auth.lastUnpairedPartnerName != null) {
-      final name = auth.lastUnpairedPartnerName;
+    if (auth.unpairedByPartner) {
+      auth.clearUnpairedByPartnerFlag();
       auth.clearLastUnpairedPartnerName();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Row(
+              content: const Row(
                 children: [
-                  const Icon(Icons.info_outline_rounded, color: Colors.white),
+                  Icon(Icons.info_outline_rounded, color: Colors.white),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Unpaired with $name',
-                      style: const TextStyle(
+                      'Your connection has been disconnected by your partner.',
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -79,7 +80,36 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
               backgroundColor: AppTheme.primary,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              duration: const Duration(seconds: 3), // 3 seconds only
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      });
+    } else if (auth.lastUnpairedPartnerName != null) {
+      auth.clearLastUnpairedPartnerName();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Your connection has been disconnected.',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: AppTheme.primary,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              duration: const Duration(seconds: 4),
             ),
           );
         }
@@ -118,7 +148,11 @@ class _PairingPageState extends State<PairingPage> with SingleTickerProviderStat
             
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (_) => const InfoPage()),
+              MaterialPageRoute(
+                builder: (_) => auth.currentUser?.setupComplete == true
+                    ? const DashboardPage()
+                    : const InfoPage(),
+              ),
             );
           }
         }

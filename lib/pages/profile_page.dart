@@ -13,7 +13,7 @@ import 'help_page.dart';
 import 'terms_page.dart';
 import 'privacy_page.dart';
 import 'contact_page.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 
 class ProfilePage extends StatefulWidget {
   final String partnerName;
@@ -779,10 +779,10 @@ class _ProfilePageState extends State<ProfilePage> {
           padding: const EdgeInsets.only(left: 8, bottom: 8, top: 12),
           child: Text(
             title.toUpperCase(),
-            style: GoogleFonts.quicksand(
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,
-              color: AppTheme.primary.withValues(alpha: 0.75),
+              color: AppTheme.primary,
               letterSpacing: 1.0,
             ),
           ),
@@ -974,9 +974,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
+                  const Text(
                     'Change Password',
-                    style: GoogleFonts.quicksand(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: AppTheme.textDark,
@@ -1073,9 +1073,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
           icon: const Icon(Icons.arrow_back_ios_rounded, color: AppTheme.textDark),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
+        title: const Text(
           'Personal Information',
-          style: GoogleFonts.quicksand(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: AppTheme.textDark,
@@ -1090,9 +1090,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Display Name Field
-              Text(
+              const Text(
                 'How should your partner call you?',
-                style: GoogleFonts.quicksand(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -1101,7 +1101,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _nameController,
-                style: GoogleFonts.quicksand(fontSize: 15),
+                style: const TextStyle(fontSize: 15),
                 decoration: InputDecoration(
                   hintText: 'e.g., Vicky, Katija...',
                   fillColor: Colors.white,
@@ -1126,9 +1126,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
 
               // Partner's Nickname Field (if paired)
               if (auth.currentUser?.partnerUid != null && auth.currentUser!.partnerUid!.isNotEmpty) ...[
-                Text(
+                const Text(
                   'How should you call your partner?',
-                  style: GoogleFonts.quicksand(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textDark,
@@ -1137,7 +1137,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _partnerNicknameController,
-                  style: GoogleFonts.quicksand(fontSize: 15),
+                  style: const TextStyle(fontSize: 15),
                   decoration: InputDecoration(
                     hintText: 'e.g., Honey, Sweetie...',
                     fillColor: Colors.white,
@@ -1162,9 +1162,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
               ],
 
               // Gender Field
-              Text(
+              const Text(
                 'Gender',
-                style: GoogleFonts.quicksand(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -1195,9 +1195,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
               const SizedBox(height: 20),
 
               // DOB Field
-              Text(
+              const Text(
                 'Date of Birth',
-                style: GoogleFonts.quicksand(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -1214,9 +1214,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
               const SizedBox(height: 20),
 
               // Anniversary Field
-              Text(
+              const Text(
                 'Relationship Anniversary Date',
-                style: GoogleFonts.quicksand(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textDark,
@@ -1312,7 +1312,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
             const SizedBox(height: 8),
             Text(
               label,
-              style: GoogleFonts.quicksand(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
                 color: isSelected ? Colors.white : AppTheme.textDark,
@@ -1348,7 +1348,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage> {
               child: Text(
                 label,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.quicksand(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: isSelected ? AppTheme.textDark : AppTheme.textLight.withOpacity(0.7),

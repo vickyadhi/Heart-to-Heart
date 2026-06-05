@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 
 class EditableStickyNote extends StatefulWidget {
   final String name;
@@ -130,7 +130,7 @@ class _EditableStickyNoteState extends State<EditableStickyNote> {
                                       child: Text(
                                         widget.name,
                                         overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.quicksand(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 12,
                                           color: widget.nameColor,
@@ -140,7 +140,7 @@ class _EditableStickyNoteState extends State<EditableStickyNote> {
                                     const SizedBox(width: 4),
                                     Text(
                                       '✏️…',
-                                      style: GoogleFonts.quicksand(
+                                      style: TextStyle(
                                         fontSize: 10,
                                         color: widget.nameColor.withOpacity(0.7),
                                         fontStyle: FontStyle.italic,
@@ -151,7 +151,7 @@ class _EditableStickyNoteState extends State<EditableStickyNote> {
                               : Text(
                                   widget.name,
                                   overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.quicksand(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 12,
                                     color: widget.nameColor,
@@ -169,7 +169,7 @@ class _EditableStickyNoteState extends State<EditableStickyNote> {
                             maxLines: null,
                             expands: true,
                             textAlignVertical: TextAlignVertical.top,
-                            style: GoogleFonts.quicksand(
+                            style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                               color: const Color(0xFF333333),
@@ -177,7 +177,7 @@ class _EditableStickyNoteState extends State<EditableStickyNote> {
                             ),
                             decoration: InputDecoration(
                               hintText: 'Write a note...',
-                              hintStyle: GoogleFonts.quicksand(
+                              hintStyle: TextStyle(
                                 fontSize: 13,
                                 color: widget.nameColor.withOpacity(0.45),
                                 height: lineSpacing / 13,
@@ -204,7 +204,7 @@ class _EditableStickyNoteState extends State<EditableStickyNote> {
                             child: widget.content.isEmpty
                                 ? Text(
                                     '(no note yet)',
-                                    style: GoogleFonts.quicksand(
+                                    style: TextStyle(
                                       fontSize: 12,
                                       color: widget.nameColor.withOpacity(0.4),
                                       fontStyle: FontStyle.italic,
@@ -213,7 +213,7 @@ class _EditableStickyNoteState extends State<EditableStickyNote> {
                                   )
                                 : Text(
                                     widget.content,
-                                    style: GoogleFonts.quicksand(
+                                    style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
                                       color: const Color(0xFF333333),

@@ -839,7 +839,7 @@ class ConnectionService extends ChangeNotifier {
 
   String _getDefaultMessage(String type) {
     switch (type) {
-      case 'love_tap': return 'missed you';
+      case 'love_tap': return 'loves you';
       case 'miss_you': return 'misses you';
       case 'sad': return 'is feeling sad';
       case 'excited': return 'is excited!';
@@ -923,6 +923,15 @@ class ConnectionService extends ChangeNotifier {
       const String endpoint =
           'https://fcm.googleapis.com/v1/projects/$projectId/messages:send';
 
+      String notificationIcon = 'ic_notification';
+      if (type == 'miss_you' || type == 'sad') {
+        notificationIcon = 'ic_notification_sad';
+      } else if (type == 'excited') {
+        notificationIcon = 'ic_notification_excited';
+      } else if (type == 'thinking') {
+        notificationIcon = 'ic_notification_thinking';
+      }
+
       // 5. Build the V1 message payload
       final payload = {
         'message': {
@@ -936,7 +945,7 @@ class ConnectionService extends ChangeNotifier {
             'notification': {
               'channel_id': soundEnabled ? 'high_importance_channel' : 'silent_importance_channel',
               if (soundEnabled) 'sound': 'default',
-              'icon': 'ic_notification',
+              'icon': notificationIcon,
             },
           },
           'apns': {

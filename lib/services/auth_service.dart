@@ -16,6 +16,7 @@ class AuthService extends ChangeNotifier {
   bool _isInitialized = false;
   StreamSubscription<DocumentSnapshot>? _userDocSubscription;
   String? _lastUnpairedPartnerName;
+  bool _unpairedByPartner = false;
 
   UserProfile? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
@@ -23,9 +24,15 @@ class AuthService extends ChangeNotifier {
   bool get isAuthenticated => _currentUser != null;
   bool get isPaired => _currentUser?.partnerUid != null && _currentUser!.partnerUid!.isNotEmpty;
   String? get lastUnpairedPartnerName => _lastUnpairedPartnerName;
+  bool get unpairedByPartner => _unpairedByPartner;
 
   void clearLastUnpairedPartnerName() {
     _lastUnpairedPartnerName = null;
+  }
+
+  void clearUnpairedByPartnerFlag() {
+    _unpairedByPartner = false;
+    notifyListeners();
   }
 
   AuthService() {
@@ -102,7 +109,16 @@ class AuthService extends ChangeNotifier {
         .snapshots()
         .listen((snap) {
       if (snap.exists && snap.data() != null) {
-        _currentUser = UserProfile.fromMap(snap.data()!);
+        final data = snap.data()!;
+        if (data['unpairedByPartner'] == true) {
+          _unpairedByPartner = true;
+          _lastUnpairedPartnerName = data['lastPartnerName'];
+          _firestore.collection('users').doc(uid).update({
+            'unpairedByPartner': FieldValue.delete(),
+            'lastPartnerName': FieldValue.delete(),
+          }).catchError((e) => debugPrint('Error deleting unpaired fields: $e'));
+        }
+        _currentUser = UserProfile.fromMap(data);
         notifyListeners();
       }
     }, onError: (e) {
@@ -147,6 +163,14 @@ class AuthService extends ChangeNotifier {
             .update({'isOnline': true})
             .catchError((e) => debugPrint('isOnline update error: $e'));
         data['isOnline'] = true;
+        if (data['unpairedByPartner'] == true) {
+          _unpairedByPartner = true;
+          _lastUnpairedPartnerName = data['lastPartnerName'];
+          _firestore.collection('users').doc(uid).update({
+            'unpairedByPartner': FieldValue.delete(),
+            'lastPartnerName': FieldValue.delete(),
+          }).catchError((e) => debugPrint('Error deleting unpaired fields: $e'));
+        }
         if (data['pairingCode'] == null || (data['pairingCode'] as String).isEmpty) {
           final pairingCode = await _generateUniquePairingCode()
               .timeout(const Duration(seconds: 8));
@@ -529,6 +553,8 @@ class AuthService extends ChangeNotifier {
           'partnerUid': FieldValue.delete(),
           'partnerName': FieldValue.delete(),
           'connectedAt': FieldValue.delete(),
+          'unpairedByPartner': true,
+          'lastPartnerName': _currentUser!.displayName,
         });
       }
     } catch (e) {
@@ -540,7 +566,9 @@ class AuthService extends ChangeNotifier {
   // Clear partner details reactively when partner unpairs us
   void clearPartnerDetails() {
     if (_currentUser == null) return;
-    _lastUnpairedPartnerName = _currentUser!.partnerNickname ?? _currentUser!.partnerName;
+    if (!_unpairedByPartner) {
+      _lastUnpairedPartnerName = _currentUser!.partnerNickname ?? _currentUser!.partnerName;
+    }
     _currentUser = _currentUser!.clearPartner();
     notifyListeners();
   }

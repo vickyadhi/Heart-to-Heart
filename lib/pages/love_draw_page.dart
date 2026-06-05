@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import '../services/connection_service.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
@@ -160,7 +160,7 @@ class _LoveDrawPageState extends State<LoveDrawPage> {
         ),
         title: Text(
           'Love Draw',
-          style: GoogleFonts.quicksand(
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -401,7 +401,7 @@ class _LoveDrawPageState extends State<LoveDrawPage> {
                         )
                       : Text(
                           'Send Drawing to Partner',
-                          style: GoogleFonts.quicksand(
+                          style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,

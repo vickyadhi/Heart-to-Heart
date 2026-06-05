@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
 import 'dashboard_page.dart';
@@ -66,19 +65,19 @@ class _InfoPageState extends State<InfoPage> {
     if (!_formKey.currentState!.validate()) return;
     if (_dob == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your Date of Birth!')),
+        const SnackBar(content: Text('Please select your Date of Birth.')),
       );
       return;
     }
     if (_gender == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your gender!')),
+        const SnackBar(content: Text('Please select your gender.')),
       );
       return;
     }
     if (_anniversary == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your Anniversary date!')),
+        const SnackBar(content: Text('Please select your Anniversary date.')),
       );
       return;
     }
@@ -126,38 +125,22 @@ class _InfoPageState extends State<InfoPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Header Logo / Icon
+                      // Header Logo / Icon (3D Hands Heart)
                       Center(
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primary.withOpacity(0.15),
-                                blurRadius: 20,
-                                spreadRadius: 4,
-                              ),
-                            ],
-                          ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.favorite_rounded,
-                              color: AppTheme.primary,
-                              size: 40,
-                            ),
-                          ),
+                        child: Image.asset(
+                          'assets/images/hands_heart_3d.png',
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.contain,
                         ),
                       ),
                       const SizedBox(height: 24),
                       
                       // Heading
-                      Text(
+                      const Text(
                         'Tell Us About Yourself',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.quicksand(
+                        style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.textDark,
@@ -168,7 +151,7 @@ class _InfoPageState extends State<InfoPage> {
                       Text(
                         'This information helps connect you and your partner in a more meaningful way!',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.quicksand(
+                        style: TextStyle(
                           fontSize: 13,
                           color: AppTheme.textLight.withOpacity(0.8),
                           height: 1.4,
@@ -176,10 +159,10 @@ class _InfoPageState extends State<InfoPage> {
                       ),
                       const SizedBox(height: 32),
 
-                      // DISPLAY NAME
-                      Text(
+                      // DISPLAY NAME (How should your partner call you)
+                      const Text(
                         'How should your partner call you?',
-                        style: GoogleFonts.quicksand(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.textDark,
@@ -188,11 +171,10 @@ class _InfoPageState extends State<InfoPage> {
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _nameController,
-                        style: GoogleFonts.quicksand(fontSize: 15),
-                        decoration: InputDecoration(
+                        style: const TextStyle(fontSize: 15),
+                        decoration: const InputDecoration(
                           hintText: 'e.g., Sweetie, Vicky, Katija...',
                           fillColor: Colors.white,
-                          prefixIcon: const Icon(Icons.face_rounded, color: AppTheme.primary, size: 20),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -204,9 +186,9 @@ class _InfoPageState extends State<InfoPage> {
                       const SizedBox(height: 20),
 
                       // GENDER SELECTOR
-                      Text(
+                      const Text(
                         'Your Gender',
-                        style: GoogleFonts.quicksand(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.textDark,
@@ -218,7 +200,7 @@ class _InfoPageState extends State<InfoPage> {
                           Expanded(
                             child: _buildGenderCard(
                               label: 'Male',
-                              icon: Icons.male_rounded,
+                              imageAsset: 'assets/images/male_avatar_3d.png',
                               isSelected: _gender == 'Male',
                               onTap: () => setState(() => _gender = 'Male'),
                             ),
@@ -227,7 +209,7 @@ class _InfoPageState extends State<InfoPage> {
                           Expanded(
                             child: _buildGenderCard(
                               label: 'Female',
-                              icon: Icons.female_rounded,
+                              imageAsset: 'assets/images/female_avatar_3d.png',
                               isSelected: _gender == 'Female',
                               onTap: () => setState(() => _gender = 'Female'),
                             ),
@@ -237,9 +219,9 @@ class _InfoPageState extends State<InfoPage> {
                       const SizedBox(height: 20),
 
                       // DATE OF BIRTH
-                      Text(
+                      const Text(
                         'Your Date of Birth',
-                        style: GoogleFonts.quicksand(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.textDark,
@@ -256,9 +238,9 @@ class _InfoPageState extends State<InfoPage> {
                       const SizedBox(height: 20),
 
                       // ANNIVERSARY DATE
-                      Text(
+                      const Text(
                         'Relationship Anniversary Date',
-                        style: GoogleFonts.quicksand(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: AppTheme.textDark,
@@ -294,9 +276,9 @@ class _InfoPageState extends State<InfoPage> {
                                   color: Colors.white,
                                 ),
                               )
-                            : Text(
+                            : const Text(
                                 'Save and Enter Dashboard',
-                                style: GoogleFonts.quicksand(
+                                style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -316,7 +298,7 @@ class _InfoPageState extends State<InfoPage> {
 
   Widget _buildGenderCard({
     required String label,
-    required IconData icon,
+    required String imageAsset,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -347,20 +329,18 @@ class _InfoPageState extends State<InfoPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Clean vector icon instead of checkerboard image asset
             SizedBox(
               width: 72,
               height: 72,
-              child: Icon(
-                icon,
-                size: 56,
-                color: isSelected ? AppTheme.primary : AppTheme.textLight,
+              child: Image.asset(
+                imageAsset,
+                fit: BoxFit.contain,
               ),
             ),
             const SizedBox(height: 10),
             Text(
               label,
-              style: GoogleFonts.quicksand(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: isSelected ? AppTheme.primary : AppTheme.textDark,
@@ -413,7 +393,7 @@ class _InfoPageState extends State<InfoPage> {
               child: Text(
                 label,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.quicksand(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: isSelected ? AppTheme.textDark : AppTheme.textLight.withOpacity(0.7),

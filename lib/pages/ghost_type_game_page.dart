@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import '../services/auth_service.dart';
 import '../services/connection_service.dart';
 import '../theme.dart';
@@ -205,7 +205,7 @@ class _GhostTypeGamePageState extends State<GhostTypeGamePage> {
             title: Text(
               title,
               textAlign: TextAlign.center,
-              style: GoogleFonts.quicksand(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: success ? const Color(0xFF2E7D32) : AppTheme.primary,
@@ -214,7 +214,7 @@ class _GhostTypeGamePageState extends State<GhostTypeGamePage> {
             content: Text(
               message,
               textAlign: TextAlign.center,
-              style: GoogleFonts.quicksand(
+              style: TextStyle(
                 fontSize: 14,
                 color: AppTheme.textLight,
                 height: 1.45,
@@ -338,7 +338,7 @@ class _GhostTypeGamePageState extends State<GhostTypeGamePage> {
         ),
         title: Text(
           'Ghost Type 👻',
-          style: GoogleFonts.quicksand(
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: AppTheme.textDark,
@@ -393,7 +393,7 @@ class _GhostTypeGamePageState extends State<GhostTypeGamePage> {
               child: Text(
                 "Type the correct letters on the invisible keyboard:",
                 textAlign: TextAlign.center,
-                style: GoogleFonts.quicksand(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: AppTheme.textLight.withOpacity(0.6),
@@ -458,7 +458,7 @@ class _GhostTypeGamePageState extends State<GhostTypeGamePage> {
                     const SizedBox(width: 10),
                     Text(
                       'SUBMIT',
-                      style: GoogleFonts.quicksand(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.2,

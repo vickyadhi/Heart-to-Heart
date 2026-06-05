@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
 import '../services/auth_service.dart';
 import '../services/connection_service.dart';
@@ -97,7 +96,7 @@ class _WriteNotePageState extends State<WriteNotePage> {
           ),
           title: Text(
             'Write to $partnerName',
-            style: GoogleFonts.quicksand(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               color: AppTheme.textDark,
               fontSize: 20,
@@ -146,10 +145,10 @@ class _WriteNotePageState extends State<WriteNotePage> {
                               maxLines: null,
                               keyboardType: TextInputType.multiline,
                               textCapitalization: TextCapitalization.sentences,
-                              style: GoogleFonts.quicksand(
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF2C2525),
+                                color: Color(0xFF2C2525),
                                 height: 1.5, // 24.0 px line spacing (16 * 1.5)
                               ),
                               onChanged: (text) => _onTextChanged(text, conn),
@@ -159,7 +158,7 @@ class _WriteNotePageState extends State<WriteNotePage> {
                                 enabledBorder: InputBorder.none,
                                 contentPadding: const EdgeInsets.fromLTRB(56, 12, 16, 16), // 56px left leaves room for margin line
                                 hintText: 'Write your thoughts here...',
-                                hintStyle: GoogleFonts.quicksand(
+                                hintStyle: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
                                   color: Colors.grey.withOpacity(0.6),
@@ -198,9 +197,9 @@ class _WriteNotePageState extends State<WriteNotePage> {
                             borderRadius: BorderRadius.circular(24),
                           ),
                         ),
-                        child: Text(
+                        child: const Text(
                           'Erase',
-                          style: GoogleFonts.quicksand(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -221,9 +220,9 @@ class _WriteNotePageState extends State<WriteNotePage> {
                             borderRadius: BorderRadius.circular(24),
                           ),
                         ),
-                        child: Text(
+                        child: const Text(
                           'Save',
-                          style: GoogleFonts.quicksand(
+                          style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),

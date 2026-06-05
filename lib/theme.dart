@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Romantic Theme Palette Colors
@@ -74,45 +73,45 @@ class AppTheme {
         surface: cardBg,
         error: Colors.redAccent,
       ),
-      fontFamily: GoogleFonts.quicksand().fontFamily,
+      fontFamily: 'Gotham',
       scaffoldBackgroundColor: const Color(0xFFFFF9FA),
-      textTheme: TextTheme(
-        displayLarge: GoogleFonts.quicksand(
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textDark,
         ),
-        displayMedium: GoogleFonts.quicksand(
+        displayMedium: TextStyle(
           fontSize: 26,
           fontWeight: FontWeight.bold,
           color: textDark,
         ),
-        displaySmall: GoogleFonts.quicksand(
+        displaySmall: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: textDark,
         ),
-        headlineMedium: GoogleFonts.quicksand(
+        headlineMedium: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textDark,
         ),
-        titleLarge: GoogleFonts.quicksand(
+        titleLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: textDark,
         ),
-        bodyLarge: GoogleFonts.quicksand(
+        bodyLarge: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w500,
           color: textDark,
         ),
-        bodyMedium: GoogleFonts.quicksand(
+        bodyMedium: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w500,
           color: textLight,
         ),
-        labelLarge: GoogleFonts.quicksand(
+        labelLarge: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.bold,
           color: Colors.white,
@@ -128,7 +127,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          textStyle: GoogleFonts.quicksand(
+          textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),

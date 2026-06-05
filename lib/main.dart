@@ -208,7 +208,7 @@ Future<void> backgroundCallback(Uri? uri) async {
             final eventId = FirebaseFirestore.instance.collection('events').doc().id;
             
             String defaultMsg = 'sent you love';
-            if (type == 'love_tap') defaultMsg = 'missed you';
+            if (type == 'love_tap') defaultMsg = 'loves you';
             if (type == 'miss_you') defaultMsg = 'misses you';
             if (type == 'sad') defaultMsg = 'is feeling sad';
             if (type == 'excited') defaultMsg = 'is excited!';
@@ -314,22 +314,31 @@ Future<void> _sendFcmV1NotificationBackground({
     const String endpoint =
         'https://fcm.googleapis.com/v1/projects/$projectId/messages:send';
 
-    // 5. Build the V1 message payload
-    final payload = {
-      'message': {
-        'token': token,
+  String notificationIcon = 'ic_notification';
+  if (type == 'miss_you' || type == 'sad') {
+    notificationIcon = 'ic_notification_sad';
+  } else if (type == 'excited') {
+    notificationIcon = 'ic_notification_excited';
+  } else if (type == 'thinking') {
+    notificationIcon = 'ic_notification_thinking';
+  }
+
+  // 5. Build the V1 message payload
+  final payload = {
+    'message': {
+      'token': token,
+      'notification': {
+        'title': title,
+        'body': '$body $emojiIcon',
+      },
+      'android': {
+        'priority': 'high',
         'notification': {
-          'title': title,
-          'body': '$body $emojiIcon',
+          'channel_id': soundEnabled ? 'high_importance_channel' : 'silent_importance_channel',
+          if (soundEnabled) 'sound': 'default',
+          'icon': notificationIcon,
         },
-        'android': {
-          'priority': 'high',
-          'notification': {
-            'channel_id': soundEnabled ? 'high_importance_channel' : 'silent_importance_channel',
-            if (soundEnabled) 'sound': 'default',
-            'icon': 'ic_notification',
-          },
-        },
+      },
         'apns': {
           'payload': {
             'aps': {
